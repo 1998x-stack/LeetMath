@@ -131,6 +131,7 @@ function renderAccount() {
 function logout(silent) {
   if (!silent) api("POST", "/auth/logout").catch(() => {});
   state.user = null;
+  state.csrfToken = null; // logout clears the CSRF cookie; the next login must bootstrap a fresh pair.
   state.attempts = {};
   renderAccount();
   if (!silent) navigate("/");
