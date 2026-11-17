@@ -4191,7 +4191,8 @@
        }
       }
      }
-    }
+    },
+    "description": "Issue/reuse a signed, JS-readable CSRF token; it is not an authentication credential."
    }
   },
   "/api/v1/auth/token": {
@@ -4227,7 +4228,8 @@
        }
       }
      }
-    }
+    },
+    "description": "Explicit non-browser compatibility endpoint. Never use from the SPA."
    }
   }
  },
