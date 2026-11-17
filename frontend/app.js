@@ -4,6 +4,8 @@
 
 // ───────────────────────── utilities ─────────────────────────
 const $app = document.getElementById("app");
+// Remove credentials left by the pre-N2 SPA; the browser session now lives only in HttpOnly cookies.
+try { sessionStorage.removeItem("lm_token"); localStorage.removeItem("lm_token"); } catch {}
 const state = { csrfToken: null, user: null, attempts: {}, knowledge: null };
 
 function h(tag, attrs = {}, ...kids) {
