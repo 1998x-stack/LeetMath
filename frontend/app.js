@@ -477,33 +477,157 @@ async function newProblem() {
 }
 async function adminEdit(body, rid) {
   const r = await api("GET", "/admin/problem-revisions/" + rid);
+  const CMS = window.LeetMathCms;
+  if (!CMS) throw new Error("CMS 编辑器脚本加载失败");
   let lock = r.lock_version;
-  const ta = h("textarea", { rows: 28, spellcheck: "false" }); ta.value = JSON.stringify(r.document, null, 2);
+  let doc = CMS.copy(r.document);
+  let parentDoc = null;
+  let mode = "form";
+  const editable = r.status === "draft" && hasRole("editor");
   const out = h("div");
-  const parse = () => { try { return JSON.parse(ta.value); } catch (e) { out.replaceChildren(h("p", { class: "feedback rejected" }, "JSON 语法错误：" + e.message)); return null; } };
-  const act = (label, fn, cls = "btn") => h("button", { class: cls, onclick: async () => { try { await fn(); } catch (e) { out.replaceChildren(h("div", { class: "feedback rejected" }, errText(e)), e.details && e.details.issues ? issuesList(e.details.issues) : ""); } } }, label);
-  const flow = (path, extra) => async () => { const res = await api("POST", `/admin/problem-revisions/${rid}/${path}`, extra || {}); toast("状态：" + res.status); route(); };
-  const editable = r.status === "draft";
+  const formHost = h("div");
+  const ta = h("textarea", { rows: 28, spellcheck: "false", readOnly: !editable, "aria-label": "题目 Content Contract JSON" });
+  ta.value = JSON.stringify(doc, null, 2);
+  const rawHost = h("div", {}, ta);
+  rawHost.hidden = true;
+  const diffBox = h("section", { class: "cms-diff", "aria-live": "polite" });
+  const formatVal = (value) => {
+    const text = value === undefined ? "（不存在）" : JSON.stringify(value);
+    return text.length > 180 ? text.slice(0, 180) + "…" : text;
+  };
+  const rawDoc = (report = true) => {
+    try { return JSON.parse(ta.value); }
+    catch (e) {
+      if (report) out.replaceChildren(h("p", { class: "feedback rejected" }, "JSON 语法错误：" + e.message));
+      return null;
+    }
+  };
+  const current = (report = true) => mode === "form" ? doc : rawDoc(report);
+  const showDiff = (base, next, title) => {
+    const list = CMS.changes(base, next);
+    return h("div", { class: "cms-change-group" }, h("h3", {}, title + " · " + list.length + (list.length >= 100 ? "+" : "") + " 处"),
+      list.length ? h("ul", { class: "cms-changes" }, list.map((entry) =>
+        h("li", {}, h("code", {}, entry.path),
+          h("div", { class: "cms-before" }, "原：", formatVal(entry.before)),
+          h("div", { class: "cms-after" }, "新：", formatVal(entry.after))))) :
+        h("p", { class: "muted small" }, "无变化"));
+  };
+  const updateDiff = () => {
+    const next = current(false);
+    if (!next) {
+      diffBox.replaceChildren(h("p", { class: "feedback rejected" }, "JSON 尚不能解析，无法比较或保存"));
+      return;
+    }
+    diffBox.replaceChildren(showDiff(r.document, next, "当前未保存的变更"),
+      parentDoc ? showDiff(parentDoc, next, "相对上一版本的差异") :
+        h("p", { class: "muted small" }, "无上一版本，或尚未加载。"));
+  };
+  const renderForm = () => { formHost.replaceChildren(CMS.createForm(doc, {
+    h, rich, editable, onChange: updateDiff, refresh: () => { renderForm(); updateDiff(); }
+  })); };
+  const modeSelect = h("select", { "aria-label": "编辑模式", onchange: (e) => {
+    const next = e.target.value;
+    if (mode === "raw") {
+      const parsed = rawDoc();
+      if (!parsed) { e.target.value = "raw"; return; }
+      doc = parsed;
+    }
+    if (next === "raw") ta.value = JSON.stringify(doc, null, 2);
+    mode = next;
+    formHost.hidden = next !== "form";
+    rawHost.hidden = next !== "raw";
+    if (next === "form") renderForm();
+    updateDiff();
+  } }, h("option", { value: "form" }, "结构化表单"), h("option", { value: "raw" }, "高级 JSON"));
+  ta.addEventListener("input", updateDiff);
+  const act = (label, fn, cls = "btn") => h("button", { class: cls, onclick: async () => {
+    try { await fn(); }
+    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected" }, errText(e)),
+      e.details && e.details.issues ? issuesList(e.details.issues) : ""); }
+  } }, label);
+  const flow = (path, extra) => async () => {
+    const res = await api("POST", "/admin/problem-revisions/" + rid + "/" + path, extra || {});
+    toast("状态：" + res.status); route();
+  };
   const actions = [];
-  actions.push(act("预检", async () => { const d = parse(); if (!d) return; const res = await api("POST", "/admin/preflight", { document: d }); out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected") }, res.ok ? "无阻断项" : "存在阻断项"), issuesList(res.issues)); }));
-  if (editable && hasRole("editor")) {
-    actions.push(act("保存草稿", async () => { const d = parse(); if (!d) return; const res = await api("PATCH", "/admin/problem-revisions/" + rid, { document: d }, { "If-Match": `"${lock}"` }); lock = res.lock_version; toast("已保存（版本锁 " + lock + "）"); }, "btn primary"));
-    actions.push(act("送审", flow("submit-review")));
+  actions.push(act("预检当前内容", async () => {
+    const d = current();
+    if (!d) return;
+    const res = await api("POST", "/admin/preflight", { document: d });
+    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected") },
+      res.ok ? "无阻断项" : "存在阻断项"), issuesList(res.issues));
+  }));
+  if (editable) {
+    actions.push(act("保存草稿", async () => {
+      const d = current();
+      if (!d) return;
+      const res = await api("PATCH", "/admin/problem-revisions/" + rid,
+        { document: d }, { "If-Match": '"' + lock + '"' });
+      lock = res.lock_version;
+      toast("已保存（版本锁 " + lock + "）");
+      await route();  // Read back server canonicalization and reset the unsaved baseline.
+    }, "btn primary"));
+    actions.push(act("送审", async () => {
+      const d = current();
+      if (!d) return;
+      if (CMS.changes(r.document, d).length) throw new Error("有未保存变更，请先保存草稿再送审");
+      await flow("submit-review")();
+    }));
   }
   if (["in_math_review", "in_rights_review"].includes(r.status) && hasRole("reviewer", "rights_reviewer")) {
     actions.push(act(r.status === "in_math_review" ? "数学审核通过" : "版权审核通过", flow("approve"), "btn primary"));
-    actions.push(act("驳回", async () => { const reason = prompt("驳回原因（必填）："); if (reason) await flow("reject", { reason })(); }, "btn danger"));
+    actions.push(act("驳回", async () => {
+      const reason = prompt("驳回原因（必填）：");
+      if (reason) await flow("reject", { reason })();
+    }, "btn danger"));
   }
   if (r.status === "approved" && hasRole("reviewer")) actions.push(act("发布", flow("publish"), "btn primary"));
-  if (r.status === "published" && hasRole("reviewer", "rights_reviewer")) actions.push(act("撤稿", async () => { const reason = prompt("撤稿原因（必填）："); if (reason) await flow("retract", { reason })(); }, "btn danger"));
-  if (["published", "archived", "retracted"].includes(r.status) && hasRole("editor")) actions.push(act("基于此创建新修订", async () => { const res = await api("POST", `/admin/problems/${r.problem_id}/revisions`); navigate("/admin/edit/" + res.revision_id); }));
-  if (r.status === "published" && hasRole("rights_reviewer")) actions.push(act(r.takedown_hold ? "解除版权冻结" : "版权冻结", async () => { const reason = prompt("原因："); if (reason) { await api("POST", `/admin/problems/${r.problem_id}/rights-hold`, { hold: !r.takedown_hold, reason }); route(); } }, "btn danger"));
+  if (r.status === "published" && hasRole("reviewer", "rights_reviewer")) {
+    actions.push(act("撤稿", async () => {
+      const reason = prompt("撤稿原因（必填）：");
+      if (reason) await flow("retract", { reason })();
+    }, "btn danger"));
+  }
+  if (["published", "archived", "retracted"].includes(r.status) && hasRole("editor")) {
+    actions.push(act("基于此创建新修订", async () => {
+      const res = await api("POST", "/admin/problems/" + r.problem_id + "/revisions");
+      navigate("/admin/edit/" + res.revision_id);
+    }));
+  }
+  if (r.status === "published" && hasRole("rights_reviewer")) {
+    actions.push(act(r.takedown_hold ? "解除版权冻结" : "版权冻结", async () => {
+      const reason = prompt("原因：");
+      if (reason) {
+        await api("POST", "/admin/problems/" + r.problem_id + "/rights-hold",
+          { hold: !r.takedown_hold, reason });
+        route();
+      }
+    }, "btn danger"));
+  }
   body.append(h("div", { class: "panel" },
-    h("div", { class: "row spread" }, h("h2", {}, `${r.display_id} · v${r.revision_no} · ${r.title}`), h("span", { class: "chip" }, r.status)),
+    h("div", { class: "row spread" }, h("h2", {}, r.display_id + " · v" + r.revision_no + " · " + r.title),
+      h("span", { class: "chip" }, r.status)),
     r.review_note ? h("p", { class: "feedback partial" }, "审核意见：" + r.review_note) : null,
-    !editable ? h("p", { class: "small muted" }, "非草稿状态：内容只读（已发布版本不可原地修改，请创建新修订）。") : null,
-    h("div", { class: "row", style: "margin:10px 0" }, actions), out, ta),
-    h("div", { class: "panel" }, h("h3", {}, "工作流记录"), h("ul", { class: "small" }, r.workflow.map((w) => h("li", {}, `${w.at.slice(0, 19).replace("T", " ")}  ${w.from} → ${w.to}  ${w.reason || ""}`)))));
+    !editable ? h("p", { class: "small muted" }, "当前版本只读，已发布内容不可原位修改。") : null,
+    h("div", { class: "row", style: "margin:10px 0" }, actions),
+    h("div", { class: "row cms-toolbar" }, h("label", {}, "编辑模式", modeSelect)),
+    out, formHost, rawHost),
+    h("div", { class: "panel" }, h("h3", {}, "差异审阅"), diffBox),
+    h("div", { class: "panel" }, h("h3", {}, "工作流记录"),
+      h("ul", { class: "small" }, r.workflow.map((w) =>
+        h("li", {}, w.at.slice(0, 19).replace("T", " ") + "  " + w.from + " → " + w.to + "  " + (w.reason || ""))))));
+  renderForm();
+  updateDiff();
+  try {
+    const history = await api("GET", "/admin/problems/" + r.problem_id);
+    const previous = history.revisions.filter((entry) => entry.revision_no < r.revision_no)
+      .sort((a, b) => b.revision_no - a.revision_no)[0];
+    if (previous) {
+      const detail = await api("GET", "/admin/problem-revisions/" + previous.revision_id);
+      parentDoc = detail.document;
+      updateDiff();
+    }
+  } catch (e) { diffBox.append(h("p", { class: "muted small" }, "上一版本加载失败：" + errText(e))); }
 }
 async function adminReviews(body) {
   for (const [stage, label] of [["math", "待数学审核"], ["rights", "待版权审核"], ["publish", "待发布"]]) {

@@ -112,3 +112,30 @@ pre.code { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8p
   .statement { font-size: 17px; }
   table.list .hide-sm { display: none; }
 }
+
+/* Structured CMS: full-width mobile-safe inputs, non-destructive MathRichText editing. */
+.cms-form { display: grid; gap: 16px; min-width: 0; }
+.cms-field { display: flex; flex: 1 1 220px; min-width: 0; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+.cms-field input, .cms-field textarea { width: 100%; min-width: 0; font-size: 14px; font-weight: 400; }
+.cms-field small { font-weight: 400; }
+.cms-rich { display: grid; gap: 8px; padding: 12px; background: #fbfcff; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.cms-rich h3 { margin: 0; }
+.cms-block-title { font-size: 12px; font-weight: 700; color: var(--muted); }
+.cms-inline-row { display: flex; gap: 8px; align-items: end; }
+.cms-inline-row > button { flex: 0 0 auto; }
+.cms-part { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; }
+.cms-part h3 { margin: 0; }
+.cms-preview { border-top: 1px dashed var(--line); padding: 12px 0 0; overflow-x: auto; max-width: 100%; }
+.cms-preview .katex-display { overflow-x: auto; }
+.cms-diff { display: grid; gap: 16px; }
+.cms-changes { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; max-height: 420px; overflow-y: auto; }
+.cms-changes li { border: 1px solid var(--line); padding: 8px 10px; border-radius: 6px; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.cms-changes code { color: var(--info); font-family: var(--mono); }
+.cms-before { color: var(--bad); }
+.cms-after { color: var(--ok); }
+.cms-toolbar label { display: flex; gap: 10px; align-items: center; }
+@media (max-width: 600px) {
+  .cms-inline-row { flex-direction: column; align-items: stretch; }
+  .cms-inline-row > button { align-self: start; }
+  .cms-part { padding: 12px; }
+}
