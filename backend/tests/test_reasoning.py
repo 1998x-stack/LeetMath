@@ -127,7 +127,7 @@ def test_due_queue_with_sibling_burial(app, client):
                     json={"event_id": uuid.uuid4().hex, "step_id": c["step_id"], "rating": "unsure"}, headers=hdr)
     assert client.post("/api/v1/learning/attempts", json={"mode": "due"}, headers=hdr).status_code == 404  # due tomorrow
     with session_scope() as s:  # time-travel: make everything due
-        uid = s.query(User).filter_by(username=reg["user"]["username"]).one().id
+        uid = s.query(User).filter_by(username=username).one().id
         for st in s.query(StepReviewState).filter_by(user_id=uid):
             st.due_at = st.due_at - timedelta(days=2)
     due = client.post("/api/v1/learning/attempts", json={"mode": "due"}, headers=hdr).json()
