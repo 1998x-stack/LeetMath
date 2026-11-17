@@ -78,4 +78,4 @@ node --check frontend/cms-editor.js
 node --test frontend/tests/*.test.cjs
 ~~~
 
-**验证状态**：该迭代已通过 GitHub 连接器写入候选分支，离线环境无法克隆 GitHub 仓库运行整套 Python/PostgreSQL 与浏览器测试；需要以 PR check 的实际结果更新本节。未完成上述验收不声称生产就绪。
+**CI 执行记录（2026-11-17）**：GitHub Actions [Run #44077042871](https://github.com/1998x-stack/LeetMath/actions/runs/44077042871) 的三个 job 均为 success：Quality（契约、DDL/OpenAPI、静态检查、5 个 Node CMS 单测）；SQLite（245 passed、1 warning，13.34s）；PostgreSQL 16（245 passed、1 warning，17.02s）。两种数据库均完成 Alembic upgrade/check/downgrade 且无 schema drift。警告来自 Starlette TestClient 对 httpx 的弃用提示。**此记录验证的是对应 commit 的自动化任务，不是浏览器人工验收，也不是生产上线许可。**
