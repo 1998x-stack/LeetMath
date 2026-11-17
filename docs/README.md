@@ -59,3 +59,4 @@
 ## 下一阶段迭代记录
 
 - [14｜CI 质量门禁与结构化 CMS（N1）](14-next-iteration-ci-and-cms.md)：从 HANDOFF 遗留问题出发，明确本批实现、验证边界、人工检查清单与 N2–N5 Backlog。该迭代不是生产上线声明。
+- [15｜N2 源码因果分析与实现](15-n2-source-flow-security-and-browser-e2e.md)：Issues #3/#4 的源码调用链、根因、浏览器 E2E、Cookie/CSRF、Redis 限流和部署约束。
