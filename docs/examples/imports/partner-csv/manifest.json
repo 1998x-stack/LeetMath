@@ -1,0 +1,15 @@
+{
+  "manifest_schema_version": "1.0",
+  "sample_only": true,
+  "source_code": "demo-partner-csv",
+  "dataset_id": "partner-demo-2026",
+  "dataset_version": "2026-11-17-v1",
+  "locale": "zh-CN",
+  "rights_grant_ref": "demo-partner-2026",
+  "input_format": "csv",
+  "adapter_version": "csv-simple-v1",
+  "normalizer_version": "math-normalizer-v1",
+  "dry_run": false,
+  "files": [{"path": "partner.csv", "sha256": "72e41c53aedf8896f996a53fc3c79f1ddc5afb0f73f8ca92da9e6d3ef5e1862d", "record_count": 5}],
+  "notes": "虚构合作方的演示数据：4 道题 + 1 条故意缺答案的坏记录。运行：python -m leetmath.cli import docs/examples/imports/partner-csv/manifest.json"
+}

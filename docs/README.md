@@ -1,6 +1,6 @@
 # LeetMath 产品与工程设计文档集
 
-> 版本：v0.1 · 状态：设计草案（尚未实现） · 更新：2026-11-17
+> 版本：v0.2 · 状态：设计文档 + 可运行 MVP（见 13 号文档；尚未生产上线） · 更新：2026-11-17
 >
 > 首期业务场景为上海高中数学；技术与内容模型从第一天支持多学段、多地域、多来源、多版本。
 
@@ -21,6 +21,7 @@
 | 10 | [阶段路线图与验收](10-delivery-roadmap.md) | 项目管理 | Epic、迭代、依赖、Definition of Done |
 | 11 | [质量、安全与运维](11-quality-security-ops.md) | QA/SRE/安全 | 测试矩阵、版权、未成年人数据、SLO |
 | 12 | [后续阶段与 ADR](12-future-phases-and-adrs.md) | 架构/负责人 | AI、Manim、国际化、架构决策 |
+| 13 | [实施计划、实现状态与验收追溯](13-implementation-plan-and-status.md) | 全体 | 分步计划、架构、AC→测试、已知差距 |
 
 ## Phase 1.5：Reasoning Practice（逐步骤间隔训练）
 

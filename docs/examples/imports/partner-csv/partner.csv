@@ -1,0 +1,6 @@
+external_id,version,title,grade_band,region,statement,part_key,prompt,response_type,max_score,checker_type,expected,assumptions,options,knowledge_code,difficulty,solution,curriculum_code,release_code
+P-1001,1,二次函数的导数与最值（合作方示例，虚构）,senior_high,CN-SH,已知 $g(x)=x^2+2x$,1,求 $g'(x)$,expression,4,symbolic_equivalence,2x+2,"{""x"":""real""}",,DERIV-RULES,2,g'(x)=2x+2,CN-SH-SENIOR-HIGH,DEMO-2026
+P-1001,1,二次函数的导数与最值（合作方示例，虚构）,senior_high,CN-SH,,2,求 $g(x)$ 的最小值,integer,2,integer_exact,-1,,,DERIV-MONOTONIC,,g(x)=(x+1)^2-1 \geq -1,,
+P-1002,1,集合的交集（合作方示例，虚构）,senior_high,CN-SH,"设 $A=\{1,2,3\}$，$B=\{2,3,4\}$",1,求 $A\cap B$,set,3,finite_set,"{2,3}",,,SETS,1,,CN-SH-SENIOR-HIGH,DEMO-2026
+P-1003,1,单选：指数函数（合作方示例，虚构）,senior_high,CN-SH,,1,函数 $y=2^x$ 的值域是,single_choice,3,choice_exact,B,,"{""A"":""$\\mathbb{R}$"",""B"":""$(0,+\\infty)$"",""C"":""$[0,+\\infty)$""}",FUNC,1,,CN-SH-SENIOR-HIGH,DEMO-2026
+P-1004,1,坏记录：缺少答案（用于演示逐行失败）,senior_high,CN-SH,,1,求 $1+1$,integer,1,integer_exact,,,,,,,,
