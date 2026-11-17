@@ -57,9 +57,6 @@ def create_app(init_db: bool | None = None) -> FastAPI:
         request.state.db = s
         try:
             if request.url.path.startswith("/api/v1/"):
-                csrf_code = csrf_error(request)
-                if csrf_code:
-                    raise ApiError(csrf_code, "request origin or CSRF token is invalid")
                 client_ip = request.client.host if request.client else "unknown"
                 path = request.url.path
                 if path.endswith("/auth/login") or path.endswith("/auth/token"):
@@ -76,7 +73,11 @@ def create_app(init_db: bool | None = None) -> FastAPI:
                     operation, limit = "read", 600
                 else:
                     operation, limit = "write", 180
+                # Count rejected CSRF requests too; otherwise an attacker could bypass IP throttles.
                 rate_limit(f"ip:{client_ip}:{operation}", limit)
+                csrf_code = csrf_error(request)
+                if csrf_code:
+                    raise ApiError(csrf_code, "request origin or CSRF token is invalid")
             response = await call_next(request)
             if response.status_code < 400:
                 s.commit()
