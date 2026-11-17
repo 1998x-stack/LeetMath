@@ -224,6 +224,23 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         assert sizes["body"] <= sizes["width"], f"mobile body overflow: {sizes}"
         editor_page.screenshot(path=str(ARTIFACTS / "teacher-review-publish-mobile-375.png"), full_page=True)
 
+        # SPA logout/re-login without a document reload exercises the in-memory CSRF reset.
+        with editor_page.expect_response(lambda response: response.url.endswith("/api/v1/auth/logout")) as logout_response:
+            editor_page.get_by_role("button", name="退出").click()
+        assert logout_response.value.status == 204
+        editor_page.get_by_role("link", name="登录 / 注册").click()
+        editor_page.locator('input[autocomplete="username"]').fill("editor")
+        editor_page.locator('input[autocomplete="current-password"]').fill("editor-pass-123")
+        editor_page.locator('button[type="submit"]').click()
+        editor_page.get_by_role("link", name="后台").wait_for(state="visible", timeout=15000)
+        me = editor_page.evaluate(
+            """async () => {
+              const response = await fetch('/api/v1/me', {credentials: 'same-origin'});
+              return response.status;
+            }"""
+        )
+        assert me == 200
+
     except Exception:
         _save_failure(editor_page, "teacher-review-publish")
         _save_failure(reviewer_page, "reviewer")
