@@ -6,7 +6,6 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
 from ..content.contract import canonical_json, sha256_text
 from ..grading.engine import grade
 from ..models import (
