@@ -68,7 +68,7 @@ jobs:
           if actual != expected:
               expected_text = json.dumps(expected, ensure_ascii=False, indent=1).splitlines()
               actual_text = json.dumps(actual, ensure_ascii=False, indent=1).splitlines()
-              print("\\n".join(difflib.unified_diff(expected_text, actual_text, fromfile="checked-in", tofile="runtime")))
+              print("\n".join(difflib.unified_diff(expected_text, actual_text, fromfile="checked-in", tofile="runtime")))
               raise AssertionError("OpenAPI drift: update docs/generated/openapi.json")
           print(f"OpenAPI matches: {len(actual['paths'])} paths")
           PY
