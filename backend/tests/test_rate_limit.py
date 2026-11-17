@@ -102,7 +102,7 @@ def test_two_independent_api_processes_share_ip_rate_limit(app):
             _wait_for_api(url, process)
         clients = [httpx.Client(base_url=url, timeout=10) for url in urls]
         csrf = [client.get("/api/v1/auth/csrf").json()["csrf_token"] for client in clients]
-        forwarded_ip = "198.51.100.77"
+        forwarded_ip = f"198.51.100.{int(uuid.uuid4().hex[:2], 16) % 250 + 1}"
         for i in range(10):
             index = i % 2
             response = clients[index].post(
