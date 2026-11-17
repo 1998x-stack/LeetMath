@@ -57,9 +57,9 @@ def _browser():
     try:
         browser = playwright.chromium.launch(headless=True)
     except Exception:
-        manager.stop()
+        playwright.stop()
         raise
-    return manager, browser
+    return playwright, browser
 
 
 def _login(page, base_url, username, password):
@@ -87,7 +87,7 @@ def _save_failure(page, name):
 
 
 def test_mobile_problem_page_renders_katex_without_viewport_overflow(live_server):
-    manager, browser = _browser()
+    playwright, browser = _browser()
     context = browser.new_context(viewport={"width": 375, "height": 812}, device_scale_factor=1)
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     context.tracing.start(screenshots=True, snapshots=True, sources=True)
@@ -112,7 +112,7 @@ def test_mobile_problem_page_renders_katex_without_viewport_overflow(live_server
         context.tracing.stop(path=str(ARTIFACTS / "problem-mobile.trace.zip"))
         context.close()
         browser.close()
-        manager.stop()
+        playwright.stop()
 
 
 def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
