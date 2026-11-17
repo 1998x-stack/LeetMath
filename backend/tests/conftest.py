@@ -15,6 +15,9 @@ _tmp = tempfile.mkdtemp(prefix="leetmath-test-")
 os.environ["LEETMATH_DATABASE_URL"] = os.environ.get("LEETMATH_TEST_DATABASE_URL", f"sqlite:///{_tmp}/test.db")
 os.environ["LEETMATH_STORAGE_DIR"] = f"{_tmp}/objects"
 os.environ["LEETMATH_RATE_LIMIT_PER_MIN"] = "100000"
+os.environ.setdefault("LEETMATH_ENV", "test")
+os.environ.setdefault("LEETMATH_COOKIE_SECURE", "0")
+os.environ.setdefault("LEETMATH_CSRF_SECRET", "leetmath-test-csrf-secret-at-least-32-chars")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -40,8 +43,10 @@ def client(app):
 @pytest.fixture(scope="session")
 def tokens(client):
     out = {}
+    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
     for u, pw in PASSWORDS.items():
-        r = client.post("/api/v1/auth/login", json={"username": u, "password": pw})
+        r = client.post("/api/v1/auth/token", json={"username": u, "password": pw},
+                        headers={"X-CSRF-Token": csrf})
         assert r.status_code == 200, r.text
         out[u] = r.json()["token"]
     return out
