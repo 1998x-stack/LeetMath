@@ -26,7 +26,7 @@ flowchart TB
 
 | 里程碑 | 交付 | 验收门槛 |
 |---|---|---|
-| R0（已交付的本地 demo） | 3 道原创大题、9 小问、28 张推理卡、本地注册/登录、自评步骤、雷达、复习、2D/3D 组件 | Pytest 5 条集成用例；浏览器实测待你本地复核 |
+| R0（目标；原型源码未随本仓库发布） | 3 道原创大题、9 小问、28 张推理卡、本地注册/登录、自评步骤、雷达、复习、2D/3D 组件 | 目标：Pytest 集成用例通过；浏览器实测（含 WebGL 降级）待执行 |
 | R1 规范冻结 | 改 LeetMath PRD、MathContentContract 加 StepRevision/ReasoningCard 合同，迁移清单、教师打分说明 | 逻辑层版本身份可追溯；20 道样例步骤人工复核 |
 | R2 PostgreSQL | Alembic 正式迁移、seed 导入、不可变历史、真实用户表、权限、权益状态 | 一次导入重放无重复；不同用户 IDOR/CSRF 等测试通过 |
 | R3 一体化练习前端 | Next.js + KaTeX/MathJax 选一、3D/2D 根据 semantic_geometry 自动渲染、移动端无障碍 | 375px/桌面、Chrome/Firefox/Safari 系列交互通过；WebGL fallback |
@@ -47,6 +47,8 @@ flowchart TB
 - `domain/identity`: 本地账户迁移、学生/教师角色、session revoke、学校 tenant（若需求成立）。
 
 ## 4. 本地运行与开发验收
+
+> 注：以下脚本、依赖清单与测试文件（`requirements.txt`、`scripts/run-local.sh`、`scripts/vendor-frontend.sh`、`tests/test_app.py`、docker compose）**尚未包含在本仓库中**，属于 R1 待交付清单；仓库当前只有设计文档与 SQL 草案。
 
 ```bash
 python -m venv .venv

@@ -4,7 +4,7 @@
 
 ## 1. 已核对的两个仓库
 
-- [LeetMath PRD 分支](https://github.com/1998x-stack/LeetMath/tree/docs/phase1-prd-and-content-platform)（检查 commit: `367f6009a1f35d41e6ff545b20a1284069240358`）有 README + `docs/00`～`docs/12` 共 13 篇专项规范、JSON/OpenAPI 例子。其 README 明确说处在设计阶段，并未上线产品。
+- [LeetMath PRD 分支](https://github.com/1998x-stack/LeetMath/tree/docs/phase1-prd-and-content-platform)（检查 commit: `52716a1b667e2b3a7415903e531c6294f1f4208f`）有 README + `docs/00`～`docs/12` 共 13 篇专项规范、JSON/OpenAPI 例子。其 README 明确说处在设计阶段，并未上线产品。
 - [hashcards-local](https://github.com/1998x-stack/hashcards-local)（检查 main，当时 HEAD 为 `ea7c0ac7e6eb9db35db30d24e6054cb42c31e8d1`）以 Rust、SQLite、文本卡片、本地 Web Drill、KaTeX、FSRS 做轻量间隔重复。`src/schema.sql` 的三张主表：cards、sessions、reviews；练习选项 Forgot / Hard / Good / Easy。README 指出卡片以文本 hash 定位，修改文本会重置进度；支持 sibling burial、Cloze、图片和复习历史。
 
 ## 2. LeetMath 现有规范与新需求对照

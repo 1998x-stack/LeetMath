@@ -32,14 +32,14 @@ flowchart TD
 | `step_criteria_links` | step_id, rubric_criterion_id | score_weight, rationale, sum normalized to part.max_score; no inferred points |
 | `step_knowledge_links` | step_id, knowledge_node_id | relation tested/prerequisite/related, weighting, reviewer, curriculum_release |
 | `step_dependencies` | (step_id, prerequisite_step_id) | DAG edges, cycle detection at publish |
-| `practice_attempts` | id, user_id, revision_id | sequence_policy, state, started_at, ended_at, renderer_version |
-| `practice_cards` | (attempt_id, sequence_no) | step_id, allocated_max_points, content_revision snapshot |
+| `learning_attempts` | id, user_id, revision_id | sequence_policy, state, started_at, ended_at, renderer_version |
+| `learning_attempt_cards` | (attempt_id, sequence_no) | step_id, allocated_max_points, content_revision snapshot |
 | `step_review_events` | id, user_id, attempt_id, card_id | grade, reveal/hint, answer_trace, source, max_score, earned_self_score, occurred_at, idempotency_key |
 | `knowledge_self_assessments` | id, user_id, attempt_id, knowledge_node_id | 1–4 confidence, explicitly self-reported |
 | `step_review_state` | (user_id, step_id, scheduler_version) | due_at, stability, difficulty, review_count, last_grade |
 | `knowledge_evidence` | id, user_id, knowledge_node_id, source_event_id | source_type, evidence_weight, observed_result, checker_version, model_version |
 | `knowledge_state_snapshots` | (user_id,knowledge_node_id,model_version,computed_at) | mean, uncertainty, evidence_count, reasons, input_hash |
-| `xp_awards` | (user_id,event_id,reward_type) | earned integer, daily cap, no penalty for unsure |
+| `learning_xp_awards` | (user_id, step_id, local_day, reward_type) | earned integer, daily cap, no penalty for unsure |
 | `recommendation_runs` | id, user_id | input_snapshot_hash, model_version, candidate scores, selected step, rationale |
 
 ### 1.2 最小数据契约示例
@@ -58,9 +58,9 @@ flowchart TD
       "reference_math_latex": "S^2=4t^2(1-t^2/9)",
       "criticality": "key",
       "rubric_criterion_ids": ["AREA-C2"],
-      "max_points": 3.0,
+      "max_points": "3.00",
       "knowledge_links": [
-        {"code": "SH-HS-ANAG-OPTIMIZATION", "relation": "tested", "weight": 1.0}
+        {"code": "SH-HS-ANAG-OPTIMIZATION", "relation": "tested", "weight": "1.00000"}
       ],
       "depends_on": ["ellipse_area_formula"]
     }
@@ -98,7 +98,7 @@ flowchart TD
 | `app_step_events` | `step_review_events` | 保存原自评分、版本和事件历史，不写正式 evaluations |
 | `app_topic_assessments` | `knowledge_self_assessments` | 自评证据独立存储，不当真实成绩 |
 | `app_review_schedules` | `step_review_state` | 切换 FSRS 时历史事件重放，不复用旧启发式稳定度 |
-| `app_xp_awards` | `xp_awards` | 贡献型 XP，按事件唯一、按天限制 |
+| `app_xp_awards` | `learning_xp_awards` | 贡献型 XP，按事件唯一、按天限制 |
 
 ## 5. API 契约（建议 `/api/v1/learning`）
 

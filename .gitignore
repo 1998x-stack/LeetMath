@@ -1,0 +1,42 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local environment & secrets
+.env
+.env.*
+!.env.example
+
+# Node / tooling (future app code)
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python (future tooling)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Local database / dumps
+*.dump
+*.sql.gz
+pgdata/
+
+# Applied patch artifacts
+*.patch
+*.diff

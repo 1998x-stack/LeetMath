@@ -69,7 +69,7 @@ response_type 标准词表：
 - proof / derivation：证明文本、结构化步骤和 rubric；P0 无可靠全自动判分承诺；
 - drawing / geometry_construction：保存向量/坐标几何对象；P1+ 先人工审核。
 
-每个 Part 具有 answer_spec_version、grading_mode（automatic/manual/hybrid/practice_only）、max_score、solutions[]、rubric criteria[]。判题器可返回 correct/incorrect/partial/pending_review/invalid，不把 parse_error 当 incorrect。
+每个 Part 具有 answer_spec_version、grading_mode（automatic/manual/hybrid/practice_only）、max_score、solutions[]、rubric criteria[]。判题器返回 accepted/rejected/partial/pending_review/invalid_response（词汇以 06 号文档为准），不把 parse_error 当 rejected。
 
 ## 6. 元数据与课程映射
 

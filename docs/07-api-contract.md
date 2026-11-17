@@ -104,8 +104,10 @@ GET  /admin/audit-events?entity_type=...
 | student | ✓ | ✓ | — | — | — |
 | editor | ✓ | ✓ | ✓（指定 scope） | — | — |
 | reviewer | ✓ | ✓ | 审阅范围读 | ✓（不能审批本人内容） | 只读授权 |
+| rights_reviewer | ✓ | ✓ | — | 仅权利审核 gate（不能审数学内容） | 授权文件审核 |
 | source_manager | ✓ | — | 导入草稿 | 不能单独发布 | ✓ |
 | admin | ✓ | 按必要权限 | ✓ | ✓（双人门禁仍适用） | ✓ |
+| auditor | — | — | — | — | 只读审计与访问报表 |
 
 ## 7. 错误码注册表
 
