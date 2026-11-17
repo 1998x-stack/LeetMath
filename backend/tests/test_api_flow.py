@@ -1,6 +1,8 @@
 """End-to-end API flows mapped to docs/01 AC-001…AC-008 and docs/09 acceptance."""
 import uuid
 
+from fastapi.testclient import TestClient
+
 
 def test_health_and_catalog(client):
     assert client.get("/api/health").json() == {"status": "ok"}
@@ -197,12 +199,14 @@ def test_security_headers_and_error_shape(client):
     assert r.headers["X-Content-Type-Options"] == "nosniff"
 
 
-def test_register_login(client):
-    name = "u" + uuid.uuid4().hex[:8]
-    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
-    headers = {"X-CSRF-Token": csrf}
-    r = client.post("/api/v1/auth/register", json={"username": name, "password": "longenough1"}, headers=headers)
-    assert r.status_code == 201 and r.json()["user"]["roles"] == ["student"]
-    assert "token" not in r.json()
-    bad = client.post("/api/v1/auth/login", json={"username": name, "password": "wrongwrong"}, headers=headers)
-    assert bad.status_code == 401
+def test_register_login(app):
+    # Keep the cookie session created here out of the shared API client used by other tests.
+    with TestClient(app) as client:
+        name = "u" + uuid.uuid4().hex[:8]
+        csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
+        headers = {"X-CSRF-Token": csrf}
+        r = client.post("/api/v1/auth/register", json={"username": name, "password": "longenough1"}, headers=headers)
+        assert r.status_code == 201 and r.json()["user"]["roles"] == ["student"]
+        assert "token" not in r.json()
+        bad = client.post("/api/v1/auth/login", json={"username": name, "password": "wrongwrong"}, headers=headers)
+        assert bad.status_code == 401
