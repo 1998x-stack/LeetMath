@@ -22,6 +22,18 @@
 | 11 | [质量、安全与运维](11-quality-security-ops.md) | QA/SRE/安全 | 测试矩阵、版权、未成年人数据、SLO |
 | 12 | [后续阶段与 ADR](12-future-phases-and-adrs.md) | 架构/负责人 | AI、Manim、国际化、架构决策 |
 
+## Phase 1.5：Reasoning Practice（逐步骤间隔训练）
+
+这是在 Phase 1 题库、发布版本、内容治理与判题基础上增加的**独立设计提案**；**不替代**上述 00–12 文档，也不改变正式考试评分原则。文档所述本地 MVP 和学习算法均不能视为生产能力。
+
+- [概览与阅读顺序](reasoning-practice/README.md)
+- [完整产品 PRD 与学生端交互](reasoning-practice/PRODUCT_PRD.md)
+- [竞品调研、现有 PRD 差异与 ADR](reasoning-practice/RESEARCH_AND_DECISIONS.md)
+- [学习 Schema、事件与 API 设计](reasoning-practice/LEARNING_SCHEMA.md)
+- [PostgreSQL 学习模块扩展 DDL 草案](reasoning-practice/postgres_learning_extension.sql)
+- [步骤自评计分、间隔复习与知识画像算法](reasoning-practice/ALGORITHMS.md)
+- [阶段实施与验收路线图](reasoning-practice/IMPLEMENTATION_ROADMAP.md)
+
 ## 可机读样例
 
 - [上海高中三问函数题](examples/problem-sh-function-001.json)：题干、题目版本、小问、答案、评分规则、来源。

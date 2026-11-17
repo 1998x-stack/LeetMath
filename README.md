@@ -21,6 +21,8 @@
 4. [实施路线图与 Epic Backlog](docs/10-delivery-roadmap.md)
 5. [真实结构化示例题（原创演示）](docs/examples/problem-sh-function-001.json)
 
+**新增专项：** [Phase 1.5 · Reasoning Practice 逐步骤间隔训练](docs/reasoning-practice/README.md)，包含学生端 PRD、复习算法、知识画像、数据库 Schema、竞品研究与实施路线图。此专项处于设计验证阶段，不改变原 Phase 1 发布门槛。
+
 ## 建设准则
 
 1. 统一内部 Problem ID；第三方题号存各自 Source 命名空间。
