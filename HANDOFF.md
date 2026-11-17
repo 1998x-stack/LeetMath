@@ -103,7 +103,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
 ### 4.2 未修复，需接手人决策
 
-1. **N1 候选分支已补 `.github/workflows/ci.yml`**：quality（契约、DDL/OpenAPI 漂移、关键 Ruff、JS+Node）与 SQLite/PostgreSQL 16（迁移、测试）两类工作已提交；**不代表 workflow 已通过或已合并**，以 PR 的实时 Check Runs 为准。新增教师端常用字段表单和差异审阅，详见 [docs/14](docs/14-next-iteration-ci-and-cms.md)；原有 CMS 双审与版权门禁不变。
+1. **N1 候选分支已补 `.github/workflows/ci.yml`**：quality（契约、DDL/OpenAPI 漂移、关键 Ruff、JS+Node）与 SQLite/PostgreSQL 16（迁移、测试）两类工作已提交；**GitHub PR #2 首次 CI（Run #44077042871）已全部通过**：SQLite 245/245、PostgreSQL 16 245/245、quality（含 5 个 Node CMS 单测）成功；尚未完成浏览器手测，且以 PR 是否合并作为主分支现状判断。新增教师端常用字段表单和差异审阅，详见 [docs/14](docs/14-next-iteration-ci-and-cms.md)；原有 CMS 双审与版权门禁不变。
 2. **AC-007 的 Playwright 桌面/375px 截图检查无任何实现**（无依赖、无配置、无脚本）。当前移动端与公式渲染只经人工检查；要么补自动化，要么在验收表里降级为人工检查清单。
 3. **文档与实现的既有落差**（照旧，见 [docs/13 §5](docs/13-implementation-plan-and-status.md)）：示例身份冲突（`demo-source.jsonl` 与 `problem-sh-function-001.json` 声明同一 `(leetmath-original-demo, demo-func-001, version "1")`，导入被判 `SOURCE_VERSION_CONFLICT`）；demo JSONL 无答案只能生成 `practice_only` 草稿；`x/x` 类定义域差异实现为 `pending_review` 而非 `rejected`（策略可在 `check_expression` 调整，需教研确认）。
 4. **依赖无上界、无锁文件**：`requirements*.txt` 只有下界。本次全新解析到 fastapi 0.163.1 / SQLAlchemy 2.1.9 / pytest 9.2.0 仍全绿，但下次安装可能跨大版本。建议加锁文件后再进 CI。
