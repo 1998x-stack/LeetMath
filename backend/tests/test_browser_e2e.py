@@ -108,6 +108,7 @@ def test_mobile_problem_page_renders_katex_without_viewport_overflow(live_server
 def test_teacher_login_uses_httponly_cookie_and_structured_cms_renders_formula(live_server):
     manager, playwright, browser = _browser()
     context = browser.new_context(viewport={"width": 1280, "height": 900})
+    ARTIFACTS.mkdir(parents=True, exist_ok=True)
     context.tracing.start(screenshots=True, snapshots=True, sources=True)
     page = context.new_page()
     try:
