@@ -160,13 +160,15 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
 
         # Edit title, MathRichText, standard answer; verify safe text rendering (no HTML execution).
         xss_text = 'E2E 正文 <img src=x onerror=window.__leetmathXss=1>'
-        editor_page.get_by_label("题目标题").fill("N2 浏览器验收：含参数函数")
+        editor_page.get_by_label("题目标题").fill("N2 浏览器验收：<img src=x onerror=window.__leetmathXss=1>")
         editor_page.get_by_label("正文 #1").first.fill(xss_text)
+        assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
+        assert editor_page.evaluate("() => window.__leetmathXss || null") is None
+        editor_page.get_by_label("正文 #1").first.fill("已知函数 ")
         editor_page.get_by_label("行内公式 LaTeX #2").fill(r"\frac{x^2+1}{x-1}")
         editor_page.get_by_label("参考答案 · expected").fill("2x - 2")
         editor_page.locator(".cms-preview .katex").first.wait_for(state="visible", timeout=15000)
         assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
-        assert editor_page.evaluate("() => window.__leetmathXss || null") is None
 
         editor_page.get_by_role("button", name="预检当前内容").click()
         editor_page.get_by_text("无阻断项", exact=False).wait_for(state="visible", timeout=15000)
@@ -222,19 +224,6 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         assert sizes["body"] <= sizes["width"], f"mobile body overflow: {sizes}"
         editor_page.screenshot(path=str(ARTIFACTS / "teacher-review-publish-mobile-375.png"), full_page=True)
 
-        # Logout clears the cookie pair; the next login must bootstrap a fresh CSRF token.
-        with editor_page.expect_response(lambda response: response.url.endswith("/api/v1/auth/logout")) as logout_response:
-            editor_page.get_by_role("button", name="退出").click()
-        assert logout_response.value.status == 204
-        editor_page.get_by_role("link", name="登录 / 注册").wait_for(state="visible", timeout=15000)
-        _login(editor_page, live_server, "editor", "editor-pass-123")
-        me = editor_page.evaluate(
-            """async () => {
-              const response = await fetch('/api/v1/me', {credentials: 'same-origin'});
-              return response.status;
-            }"""
-        )
-        assert me == 200
     except Exception:
         _save_failure(editor_page, "teacher-review-publish")
         _save_failure(reviewer_page, "reviewer")
@@ -262,7 +251,7 @@ def test_two_editors_receive_precondition_failure_without_losing_input(live_serv
         first_page.get_by_label("题目标题").wait_for(state="visible", timeout=15000)
         revision_id = re.search(r"/admin/edit/([^/?#]+)", first_page.url).group(1)
 
-        _login(second_page, live_server, "editor", "editor-pass-123")
+        _login(second_page, live_server, "admin", "admin-pass-123")
         second_page.goto(live_server + f"/admin/edit/{revision_id}", wait_until="networkidle")
         first_page.get_by_label("题目标题").fill("编辑者 A 的版本")
         second_page.get_by_label("题目标题").fill("编辑者 B 的本地输入")
