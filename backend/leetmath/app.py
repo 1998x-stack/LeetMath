@@ -62,7 +62,7 @@ def create_app(init_db: bool | None = None) -> FastAPI:
                     raise ApiError(csrf_code, "request origin or CSRF token is invalid")
                 client_ip = request.client.host if request.client else "unknown"
                 path = request.url.path
-                if path.endswith("/auth/login"):
+                if path.endswith("/auth/login") or path.endswith("/auth/token"):
                     operation, limit = "auth-login", 60
                 elif path.endswith("/auth/register"):
                     operation, limit = "auth-register", 10
