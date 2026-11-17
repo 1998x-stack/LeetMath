@@ -59,15 +59,16 @@ def csrf_error(request: Request) -> str | None:
     if request.url.path == "/api/v1/auth/token":
         # Explicit API token issuance returns a bearer token and does not authenticate via ambient cookies.
         return None
-    authorization = request.headers.get("authorization", "")
-    if authorization.lower().startswith("bearer "):
-        # Explicit Authorization headers are not ambient browser credentials.
-        return None
-    has_browser_session = bool(request.cookies.get(session_cookie_name()))
-    if request.url.path not in {"/api/v1/auth/login", "/api/v1/auth/register"} and not has_browser_session:
-        # Without an ambient browser session there is no cookie-auth CSRF surface;
-        # let the endpoint return its normal 401/403 authorization result.
-        return None
+    is_login_or_register = request.url.path in {"/api/v1/auth/login", "/api/v1/auth/register"}
+    if not is_login_or_register:
+        authorization = request.headers.get("authorization", "")
+        if authorization.lower().startswith("bearer "):
+            # Explicit Authorization headers are not ambient browser credentials.
+            return None
+        if not request.cookies.get(session_cookie_name()):
+            # Without an ambient browser session there is no cookie-auth CSRF surface;
+            # let the endpoint return its normal 401/403 authorization result.
+            return None
     cookie_token = request.cookies.get(csrf_cookie_name())
     header_token = request.headers.get("x-csrf-token")
     if not cookie_token or not header_token:
