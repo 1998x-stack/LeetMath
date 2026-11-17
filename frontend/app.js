@@ -4,7 +4,7 @@
 
 // ───────────────────────── utilities ─────────────────────────
 const $app = document.getElementById("app");
-const state = { token: sessionStorage.getItem("lm_token"), user: null, attempts: {}, knowledge: null };
+const state = { csrfToken: null, user: null, attempts: {}, knowledge: null };
 
 function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
@@ -26,19 +26,34 @@ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toSt
 function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
 function mount(...nodes) { $app.replaceChildren(...nodes); $app.focus({ preventScroll: true }); }
 
+async function csrfToken() {
+  if (state.csrfToken) return state.csrfToken;
+  const res = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", headers: { Accept: "application/json" } });
+  if (!res.ok) throw { status: res.status, code: "CSRF_BOOTSTRAP_FAILED", message: "无法初始化安全请求令牌" };
+  const data = await res.json();
+  state.csrfToken = data.csrf_token;
+  return state.csrfToken;
+}
+
 async function api(method, path, body, extraHeaders = {}) {
   const headers = { ...extraHeaders };
+  const verb = method.toUpperCase();
   if (body !== undefined) headers["Content-Type"] = "application/json";
-  if (state.token) headers["Authorization"] = "Bearer " + state.token;
+  if (!["GET", "HEAD", "OPTIONS"].includes(verb)) headers["X-CSRF-Token"] = await csrfToken();
   let res;
-  try { res = await fetch("/api/v1" + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }); }
-  catch (e) { throw { status: 0, code: "NETWORK", message: "网络连接失败，请重试" }; }
+  try {
+    res = await fetch("/api/v1" + path, {
+      method: verb, headers, credentials: "same-origin",
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+  } catch (e) { throw { status: 0, code: "NETWORK", message: "网络连接失败，请重试" }; }
   if (res.status === 204) return null;
   const ct = res.headers.get("content-type") || "";
   const data = ct.includes("json") ? await res.json() : await res.text();
   if (!res.ok) {
     const err = (data && data.error) || { code: "HTTP_" + res.status, message: String(data) };
-    if (res.status === 401 && state.token && err.code === "AUTH_REQUIRED") { logout(true); }
+    if (err.code === "CSRF_TOKEN_INVALID" || err.code === "CSRF_TOKEN_MISSING") state.csrfToken = null;
+    if (res.status === 401 && err.code === "AUTH_REQUIRED") { state.user = null; renderAccount(); }
     throw { status: res.status, ...err, etag: res.headers.get("ETag") };
   }
   if (data && typeof data === "object") Object.defineProperty(data, "_etag", { value: res.headers.get("ETag"), enumerable: false });
@@ -101,8 +116,8 @@ const STATUS_TEXT = { accepted: "✓ 正确", rejected: "✗ 不正确", partial
 
 // ───────────────────────── auth ─────────────────────────
 async function loadMe() {
-  if (!state.token) { state.user = null; return renderAccount(); }
-  try { state.user = await api("GET", "/me"); } catch { state.user = null; }
+  try { state.user = await api("GET", "/me"); }
+  catch { state.user = null; }
   renderAccount();
 }
 function isStaff() { return !!state.user && state.user.roles.some((r) => r !== "student"); }
@@ -114,8 +129,10 @@ function renderAccount() {
   else box.replaceChildren(h("a", { href: "/login", "data-link": true, class: "btn sm primary" }, "登录 / 注册"));
 }
 function logout(silent) {
-  if (state.token && !silent) api("POST", "/auth/logout").catch(() => {});
-  state.token = null; state.user = null; sessionStorage.removeItem("lm_token"); renderAccount();
+  if (!silent) api("POST", "/auth/logout").catch(() => {});
+  state.user = null;
+  state.attempts = {};
+  renderAccount();
   if (!silent) navigate("/");
 }
 function viewLogin() {
@@ -125,7 +142,7 @@ function viewLogin() {
   async function go(kind) {
     try {
       const r = await api("POST", "/auth/" + kind, { username: u.value.trim(), password: p.value });
-      state.token = r.token; sessionStorage.setItem("lm_token", r.token); state.user = r.user; renderAccount();
+      state.user = r.user; renderAccount();
       toast("欢迎，" + r.user.display_name); navigate(new URLSearchParams(location.search).get("next") || "/");
     } catch (e) { msg.textContent = errText(e); }
   }
@@ -658,7 +675,7 @@ async function sha256Hex(text) { const buf = await crypto.subtle.digest("SHA-256
 async function adminImports(body, bid) {
   if (bid) {
     const b = await api("GET", "/admin/imports/" + bid); const rows = await api("GET", `/admin/imports/${bid}/rows`);
-    const dl = async () => { const res = await fetch(`/api/v1/admin/imports/${bid}/rows?format=csv`, { headers: { Authorization: "Bearer " + state.token } }); const blob = await res.blob(); const a = h("a", { href: URL.createObjectURL(blob), download: `import-${bid}.csv` }); a.click(); };
+    const dl = async () => { const res = await fetch(`/api/v1/admin/imports/${bid}/rows?format=csv`, { credentials: "same-origin" }); const blob = await res.blob(); const a = h("a", { href: URL.createObjectURL(blob), download: `import-${bid}.csv` }); a.click(); };
     return body.append(h("div", { class: "panel" }, h("h2", {}, `批次 ${b.dataset}`), h("p", { class: "small" }, `${b.status} · ${b.dry_run ? "预检（不落库）" : "正式导入"} · adapter ${b.adapter_version}`), h("pre", { class: "code" }, JSON.stringify(b.counts, null, 2)),
       h("div", { class: "row" }, h("button", { class: "btn", onclick: dl }, "导出逐行报告 CSV"), h("button", { class: "btn", onclick: async () => { await api("POST", `/admin/imports/${bid}/retry-failed`); route(); } }, "重试失败行"))),
       h("table", { class: "list" }, h("thead", {}, h("tr", {}, ["行", "外部键", "状态", "阶段", "错误", "详情"].map((x) => h("th", {}, x)))), h("tbody", {}, rows.items.map((r) => h("tr", {}, h("td", {}, r.row_no), h("td", { class: "small" }, r.source_record_key || ""), h("td", {}, h("span", { class: "chip " + ({ new_record: "green", retained: "", duplicate_candidate: "amber", rejected: "red", failed: "red", quarantined: "red" }[r.state] || "") }, r.state)), h("td", {}, r.stage), h("td", { class: "small" }, r.error_code || ""), h("td", { class: "small" }, h("code", {}, JSON.stringify(r.error_detail || {}).slice(0, 160))))))));
