@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000005",
+    "slug": "arithmetic-sequence-basics",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "等差数列的通项与求和",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "等差数列 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "\\{a_n\\}"
+            },
+            {
+              "type": "text",
+              "text": " 中，"
+            },
+            {
+              "type": "inline_math",
+              "latex": "a_1=3"
+            },
+            {
+              "type": "text",
+              "text": "，公差 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "d=4"
+            },
+            {
+              "type": "text",
+              "text": "。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 2,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "SEQUENCE",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "sequence"
+      ]
+    },
+    "parts": []
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-005",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": [],
+  "_expect_blocking": "SCHEMA_VIOLATION",
+  "_note": "parts must have ≥1 item"
+}

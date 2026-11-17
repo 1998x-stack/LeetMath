@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000005",
+    "slug": "arithmetic-sequence-basics",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "等差数列的通项与求和",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "等差数列 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "\\{a_n\\}"
+            },
+            {
+              "type": "text",
+              "text": " 中，"
+            },
+            {
+              "type": "inline_math",
+              "latex": "a_1=3"
+            },
+            {
+              "type": "text",
+              "text": "，公差 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "d=4"
+            },
+            {
+              "type": "text",
+              "text": "。"
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "html": "<script>alert(1)</script>"
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 2,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "SEQUENCE",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "sequence"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "integer",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "a_{10}"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "integer_exact",
+          "expected": "39"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "a_{10}=a_1+9d=3+36=39"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "SEQUENCE"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "integer",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求前 10 项和 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "S_{10}"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "integer_exact",
+          "expected": "210"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "S_{10}=10a_1+\\frac{10\\cdot9}{2}d=30+180=210"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "SEQUENCE"
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "expression",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "写出通项公式 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "a_n"
+                },
+                {
+                  "type": "text",
+                  "text": "（用 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "n"
+                },
+                {
+                  "type": "text",
+                  "text": " 表示）。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "4n-1",
+          "assumptions": {
+            "n": "positive_integer"
+          },
+          "golden_cases": [
+            {
+              "input": "3+4(n-1)",
+              "expect": "accepted"
+            },
+            {
+              "input": "4n+3",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "a_n=3+(n-1)\\cdot4=4n-1"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "SEQUENCE"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-005",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": [],
+  "_expect_blocking": "SCHEMA_VIOLATION__HTML",
+  "_note": "raw HTML blocks are not part of MathRichText"
+}

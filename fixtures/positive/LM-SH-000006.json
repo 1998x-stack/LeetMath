@@ -1,0 +1,193 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000006",
+    "slug": "draw-two-balls-probability",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "不放回摸球的概率与期望",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "袋中有 3 个红球、2 个白球，除颜色外完全相同。从中不放回地随机摸出 2 个球。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 4,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "PROB",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "probability"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "rational",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求两个都是红球的概率（写成最简分数）。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "rational_exact",
+          "expected": "3/10"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "P=\\frac{C_3^2}{C_5^2}=\\frac{3}{10}"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "PROB"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "rational",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求恰好一红一白的概率。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "rational_exact",
+          "expected": "3/5"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "P=\\frac{C_3^1C_2^1}{C_5^2}=\\frac{6}{10}=\\frac35"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "PROB"
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "rational",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "设摸出红球个数为 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "X"
+                },
+                {
+                  "type": "text",
+                  "text": "，求数学期望 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "E(X)"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "rational_exact",
+          "expected": "6/5"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "X\\sim H(5,3,2)，E(X)=2\\cdot\\frac35=\\frac65"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "PROB"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-006",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

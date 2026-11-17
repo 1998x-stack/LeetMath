@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000013",
+    "slug": "mean-variance-coefficient",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "平均数、方差与变异系数",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "一组数据：2, 4, 4, 4, 5, 5, 7, 9。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "always",
+      "platform_difficulty": {
+        "value": 2,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "STATS",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "statistics"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "integer",
+        "max_score": "2.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求平均数。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "integer_exact",
+          "expected": "5"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "\\bar x=40/8=5"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "STATS"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "decimal",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求（总体）方差。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "decimal_tolerance",
+          "expected": "4"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "s^2=\\frac{9+1+1+1+0+0+4+16}{8}=4"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "STATS"
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "decimal",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求变异系数（标准差 ÷ 平均数），保留两位小数。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "decimal_tolerance",
+          "expected": "0.4",
+          "tolerance": {
+            "abs": "0.005"
+          },
+          "golden_cases": [
+            {
+              "input": "0.40",
+              "expect": "accepted"
+            },
+            {
+              "input": "0.41",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "s=2，CV=2/5=0.40"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "STATS"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-013",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

@@ -1,0 +1,193 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000004",
+    "slug": "odd-functions-multiple-choice",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "奇函数的判断（多选）",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "下列函数中，在 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "\\mathbb{R}"
+            },
+            {
+              "type": "text",
+              "text": " 上为奇函数的有（　　）"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 3,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "FUNC-PARITY",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "function"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "multiple_choice",
+        "max_score": "6.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "选出所有正确选项（少选按比例得分，错选不得分）。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "choice_set",
+          "expected": [
+            "A",
+            "B",
+            "D"
+          ],
+          "partial_credit": "proportional",
+          "golden_cases": [
+            {
+              "input": "A,B",
+              "expect": "partial"
+            },
+            {
+              "input": "A,C",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "f(-x)=-f(x) 对 x^3、\\sin x、e^x-e^{-x} 成立",
+              "x^2+1 是偶函数"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "FUNC-PARITY"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "spans": [
+                    {
+                      "type": "inline_math",
+                      "latex": "y=x^3"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "spans": [
+                    {
+                      "type": "inline_math",
+                      "latex": "y=\\sin x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "spans": [
+                    {
+                      "type": "inline_math",
+                      "latex": "y=x^2+1"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "spans": [
+                    {
+                      "type": "inline_math",
+                      "latex": "y=e^x-e^{-x}"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-004",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

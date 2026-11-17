@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000010",
+    "slug": "absolute-and-fraction-inequalities",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "绝对值不等式与分式不等式",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "解下列不等式，用区间表示解集。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 4,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "INEQUALITY",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "inequality"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "interval",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "inline_math",
+                  "latex": "|2x-1|<3"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "interval_set",
+          "expected": "(-1,2)"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "-3<2x-1<3 ⇒ -1<x<2"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "INEQUALITY"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "interval",
+        "max_score": "6.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "inline_math",
+                  "latex": "\\dfrac{x-1}{x+2}\\ge 0"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "interval_set",
+          "expected": "(-oo,-2)∪[1,+oo)",
+          "golden_cases": [
+            {
+              "input": "(-∞,-2]∪[1,+∞)",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "(x-1)(x+2)\\ge0 且 x\\ne-2",
+              "解集 (-\\infty,-2)\\cup[1,+\\infty)"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "INEQUALITY"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-010",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

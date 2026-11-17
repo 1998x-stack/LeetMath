@@ -1,0 +1,328 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000012",
+    "slug": "cubic-tangent-and-extrema",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "三次函数的切线与极值",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "已知函数 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "f(x)=x^3-3x"
+            },
+            {
+              "type": "text",
+              "text": "。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 4,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "DERIV-RULES",
+          "relation_type": "tested"
+        },
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "DERIV-TANGENT",
+          "relation_type": "tested"
+        },
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "DERIV-MONOTONIC",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "function",
+        "calculus"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "expression",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f'(x)"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "3x^2-3",
+          "assumptions": {
+            "x": "real"
+          },
+          "golden_cases": [
+            {
+              "input": "3(x-1)(x+1)",
+              "expect": "accepted"
+            },
+            {
+              "input": "3x^2",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "f'(x)=3x^2-3"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "DERIV-RULES"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "power_rule",
+            "order": 1,
+            "recall_cue": "幂函数 xⁿ 的导数？",
+            "reference_latex": "(x^3)'=3x^2,\\ (3x)'=3,\\ f'(x)=3x^2-3",
+            "max_points": "3.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "DERIV-RULES"
+            ]
+          }
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "expression",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求曲线 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "y=f(x)"
+                },
+                {
+                  "type": "text",
+                  "text": " 在 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "x=2"
+                },
+                {
+                  "type": "text",
+                  "text": " 处的切线方程（写成 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "y=\\cdots"
+                },
+                {
+                  "type": "text",
+                  "text": "）。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "9x-16",
+          "assumptions": {
+            "x": "real"
+          },
+          "golden_cases": [
+            {
+              "input": "y=9x-16",
+              "expect": "accepted"
+            },
+            {
+              "input": "y=9(x-2)+2",
+              "expect": "accepted"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "f(2)=2,\\ f'(2)=9",
+              "y-2=9(x-2)，即 y=9x-16"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "DERIV-TANGENT"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "slope",
+            "order": 1,
+            "recall_cue": "切线斜率等于什么？",
+            "reference_latex": "k=f'(2)=9,\\ f(2)=2",
+            "max_points": "2.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "DERIV-TANGENT"
+            ]
+          },
+          {
+            "semantic_key": "point_slope",
+            "order": 2,
+            "recall_cue": "点斜式写出切线。",
+            "reference_latex": "y-2=9(x-2)\\iff y=9x-16",
+            "max_points": "1.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "DERIV-TANGENT"
+            ]
+          }
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "set",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f(x)"
+                },
+                {
+                  "type": "text",
+                  "text": " 的所有极值点组成的集合。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "finite_set",
+          "expected": "{-1,1}",
+          "solve_for": "x"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "f'(x)=0 ⇒ x=\\pm1",
+              "两侧导数异号，均为极值点（x=-1 极大，x=1 极小）"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "DERIV-MONOTONIC"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "stationary",
+            "order": 1,
+            "recall_cue": "极值点的候选从哪里来？",
+            "reference_latex": "f'(x)=3(x-1)(x+1)=0\\Rightarrow x=\\pm1",
+            "max_points": "2.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "DERIV-MONOTONIC"
+            ]
+          },
+          {
+            "semantic_key": "sign_change",
+            "order": 2,
+            "recall_cue": "候选点一定是极值点吗？还要检查什么？",
+            "reference_latex": "f'\\text{ 在 }x=-1\\text{ 由正变负（极大）},\\ x=1\\text{ 由负变正（极小）}",
+            "max_points": "2.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "DERIV-MONOTONIC"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-012",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

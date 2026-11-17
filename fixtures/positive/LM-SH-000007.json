@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000007",
+    "slug": "solution-sets-and-extraneous-roots",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "方程的解集（注意增根）",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "求下列方程的解集，答案写成集合形式，如 {1,2}。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 4,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "EQUATIONS",
+          "relation_type": "tested"
+        },
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "LOG",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "equation"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "set",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "inline_math",
+                  "latex": "x^2-5x+6=0"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "finite_set",
+          "expected": "{2,3}",
+          "solve_for": "x",
+          "golden_cases": [
+            {
+              "input": "x=3或x=2",
+              "expect": "accepted"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "(x-2)(x-3)=0"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "EQUATIONS"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "set",
+        "max_score": "6.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "inline_math",
+                  "latex": "\\log_2 x+\\log_2(x-2)=3"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "finite_set",
+          "expected": "{4}",
+          "solve_for": "x",
+          "golden_cases": [
+            {
+              "input": "{4,-2}",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "定义域 x>2",
+              "x(x-2)=8 ⇒ x=4 或 x=-2",
+              "x=-2 不满足定义域，舍去"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "EQUATIONS",
+          "LOG"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-007",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

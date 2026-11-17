@@ -1,0 +1,353 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000008",
+    "slug": "ellipse-focal-chord-area",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "椭圆的焦点弦长与三角形面积",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "已知椭圆 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "C:\\dfrac{x^2}{4}+\\dfrac{y^2}{3}=1"
+            },
+            {
+              "type": "text",
+              "text": "，左、右焦点分别为 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "F_1,F_2"
+            },
+            {
+              "type": "text",
+              "text": "。过 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "F_1"
+            },
+            {
+              "type": "text",
+              "text": " 且斜率为 1 的直线 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "l"
+            },
+            {
+              "type": "text",
+              "text": " 与 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "C"
+            },
+            {
+              "type": "text",
+              "text": " 交于 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "A,B"
+            },
+            {
+              "type": "text",
+              "text": " 两点。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 6,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "ANAG-ELLIPSE",
+          "relation_type": "tested"
+        },
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "ANAG-CHORD",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "analytic_geometry"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "rational",
+        "max_score": "2.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求椭圆 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "C"
+                },
+                {
+                  "type": "text",
+                  "text": " 的离心率。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "rational_exact",
+          "expected": "1/2"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "a=2,\\ b=\\sqrt3,\\ c=1",
+              "e=c/a=1/2"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "ANAG-ELLIPSE"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "read_abc",
+            "order": 1,
+            "recall_cue": "从标准方程读出 a、b，再怎样求 c？",
+            "reference_latex": "a^2=4,\\ b^2=3,\\ c^2=a^2-b^2=1",
+            "max_points": "1.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "ANAG-ELLIPSE"
+            ]
+          },
+          {
+            "semantic_key": "eccentricity",
+            "order": 2,
+            "recall_cue": "离心率的定义？",
+            "reference_latex": "e=\\frac{c}{a}=\\frac12",
+            "max_points": "1.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "ANAG-ELLIPSE"
+            ]
+          }
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "expression",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求弦长 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "|AB|"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "24/7"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "l: y=x+1，代入得 7x^2+8x-8=0",
+              "|x_1-x_2|=\\frac{\\sqrt{64+224}}{7}=\\frac{12\\sqrt2}{7}",
+              "|AB|=\\sqrt{1+k^2}\\,|x_1-x_2|=\\frac{24}{7}"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "ANAG-CHORD"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "line_equation",
+            "order": 1,
+            "recall_cue": "直线过 F₁(−1,0)、斜率 1，方程是什么？",
+            "reference_latex": "l:\\ y=x+1",
+            "max_points": "1.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "ANAG-CHORD"
+            ]
+          },
+          {
+            "semantic_key": "substitute",
+            "order": 2,
+            "recall_cue": "联立直线与椭圆，得到关于 x 的什么方程？",
+            "reference_latex": "3x^2+4(x+1)^2=12\\iff 7x^2+8x-8=0",
+            "max_points": "1.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "ANAG-CHORD"
+            ]
+          },
+          {
+            "semantic_key": "chord_formula",
+            "order": 3,
+            "recall_cue": "不解出交点，怎样用韦达定理求弦长？",
+            "reference_latex": "|AB|=\\sqrt{1+k^2}\\cdot\\frac{\\sqrt{\\Delta}}{|a|}=\\sqrt2\\cdot\\frac{12\\sqrt2}{7}=\\frac{24}{7}",
+            "explanation": "Δ=64+224=288。",
+            "max_points": "2.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "ANAG-CHORD"
+            ]
+          }
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "expression",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "\\triangle F_2AB"
+                },
+                {
+                  "type": "text",
+                  "text": " 的面积。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "12*sqrt(2)/7",
+          "golden_cases": [
+            {
+              "input": "\\frac{12\\sqrt{2}}{7}",
+              "expect": "accepted"
+            },
+            {
+              "input": "12/7",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "F_2(1,0) 到 l: x-y+1=0 的距离 d=\\frac{2}{\\sqrt2}=\\sqrt2",
+              "S=\\frac12|AB|\\,d=\\frac{12\\sqrt2}{7}"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "ANAG-CHORD"
+        ],
+        "reasoning_steps": [
+          {
+            "semantic_key": "height",
+            "order": 1,
+            "recall_cue": "以 AB 为底，高是哪一段？",
+            "reference_latex": "d(F_2,l)=\\frac{|1-0+1|}{\\sqrt2}=\\sqrt2",
+            "max_points": "2.00",
+            "criticality": "key",
+            "knowledge_codes": [
+              "ANAG-CHORD"
+            ]
+          },
+          {
+            "semantic_key": "area",
+            "order": 2,
+            "recall_cue": "面积公式代入。",
+            "reference_latex": "S=\\frac12\\cdot\\frac{24}{7}\\cdot\\sqrt2=\\frac{12\\sqrt2}{7}",
+            "max_points": "2.00",
+            "criticality": "normal",
+            "knowledge_codes": [
+              "ANAG-CHORD"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-008",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

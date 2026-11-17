@@ -1,0 +1,238 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "display_id": "LM-SH-000009",
+    "slug": "auxiliary-angle-sine",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "locale": "zh-CN",
+    "title": "辅助角公式",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "已知函数 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "f(x)=\\sin x+\\sqrt3\\cos x"
+            },
+            {
+              "type": "text",
+              "text": "，"
+            },
+            {
+              "type": "inline_math",
+              "latex": "x\\in\\mathbb R"
+            },
+            {
+              "type": "text",
+              "text": "。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "verified_exam": false,
+      "solution_visibility": "after_submit",
+      "platform_difficulty": {
+        "value": 3,
+        "origin": "editorial_estimate",
+        "rated_by": "seed",
+        "confidence": "low"
+      },
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "TRIG",
+          "relation_type": "tested"
+        }
+      ],
+      "problem_type": [
+        "trigonometry"
+      ]
+    },
+    "parts": [
+      {
+        "display_order": 1,
+        "part_key": "1",
+        "response_type": "expression",
+        "max_score": "4.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "将 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f(x)"
+                },
+                {
+                  "type": "text",
+                  "text": " 化为 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "A\\sin(x+\\varphi)"
+                },
+                {
+                  "type": "text",
+                  "text": " 的形式。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "2*sin(x+pi/3)",
+          "assumptions": {
+            "x": "real"
+          },
+          "golden_cases": [
+            {
+              "input": "2sin(x+pi/3)",
+              "expect": "accepted"
+            },
+            {
+              "input": "2sin(x+pi/6)",
+              "expect": "rejected"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "f(x)=2\\left(\\tfrac12\\sin x+\\tfrac{\\sqrt3}{2}\\cos x\\right)=2\\sin\\left(x+\\tfrac{\\pi}{3}\\right)"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "TRIG"
+        ]
+      },
+      {
+        "display_order": 2,
+        "part_key": "2",
+        "response_type": "integer",
+        "max_score": "2.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f(x)"
+                },
+                {
+                  "type": "text",
+                  "text": " 的最大值。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "integer_exact",
+          "expected": "2"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "\\sin 的最大值为 1，故最大值为 2"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "TRIG"
+        ]
+      },
+      {
+        "display_order": 3,
+        "part_key": "3",
+        "response_type": "expression",
+        "max_score": "2.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f(x)"
+                },
+                {
+                  "type": "text",
+                  "text": " 的最小正周期。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected": "2*pi"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "reviewed",
+            "steps": [
+              "T=2\\pi"
+            ]
+          }
+        ],
+        "knowledge_codes": [
+          "TRIG"
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-009",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}
