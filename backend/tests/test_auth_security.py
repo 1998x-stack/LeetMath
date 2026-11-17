@@ -47,6 +47,7 @@ def test_logout_revokes_session_immediately_and_clears_cookies(app):
         try:
             row = s.get(AuthSession, token_hash)
             assert row is not None and row.revoked is True
+            assert s.get(AuthSession, raw) is None  # Only the SHA-256 digest is persisted.
         finally:
             s.close()
 
