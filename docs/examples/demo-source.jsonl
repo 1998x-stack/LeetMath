@@ -1,0 +1,1 @@
+{"external_id":"demo-func-001","version":"1","title":"含参数函数的导数、单调性与不等式","stem_latex":"f(x)=x\\ln x-ax,\\quad x>0,\\ a\\in\\mathbb R","parts":[{"key":"1","question":"求导函数 f'(x)"},{"key":"2","question":"讨论单调性并求最小值"},{"key":"3","question":"证明 x\\ln x-ax\\geq -e^{a-1}"}]}
