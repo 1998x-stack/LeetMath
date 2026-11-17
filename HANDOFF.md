@@ -103,7 +103,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
 ### 4.2 未修复，需接手人决策
 
-1. **`docs/13 §1 S8 / §4 AC-008` 引用的 `.github/workflows/ci.yml` 在仓库中不存在**（`find .github` 为空）。要么补 CI（SQLite + PostgreSQL 16 矩阵 + `alembic upgrade/check/downgrade` + `cli ddl` diff + `cli validate fixtures/positive` + ruff），要么修正文档。建议补 CI——现有 245 项测试与无漂移校验已可完全自动化。
+1. **N1 候选分支已补 `.github/workflows/ci.yml`**：quality（契约、DDL/OpenAPI 漂移、关键 Ruff、JS+Node）与 SQLite/PostgreSQL 16（迁移、测试）两类工作已提交；**不代表 workflow 已通过或已合并**，以 PR 的实时 Check Runs 为准。新增教师端常用字段表单和差异审阅，详见 [docs/14](docs/14-next-iteration-ci-and-cms.md)；原有 CMS 双审与版权门禁不变。
 2. **AC-007 的 Playwright 桌面/375px 截图检查无任何实现**（无依赖、无配置、无脚本）。当前移动端与公式渲染只经人工检查；要么补自动化，要么在验收表里降级为人工检查清单。
 3. **文档与实现的既有落差**（照旧，见 [docs/13 §5](docs/13-implementation-plan-and-status.md)）：示例身份冲突（`demo-source.jsonl` 与 `problem-sh-function-001.json` 声明同一 `(leetmath-original-demo, demo-func-001, version "1")`，导入被判 `SOURCE_VERSION_CONFLICT`）；demo JSONL 无答案只能生成 `practice_only` 草稿；`x/x` 类定义域差异实现为 `pending_review` 而非 `rejected`（策略可在 `check_expression` 调整，需教研确认）。
 4. **依赖无上界、无锁文件**：`requirements*.txt` 只有下界。本次全新解析到 fastapi 0.163.1 / SQLAlchemy 2.1.9 / pytest 9.2.0 仍全绿，但下次安装可能跨大版本。建议加锁文件后再进 CI。
@@ -116,8 +116,8 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 
 | 优先级 | 任务 | 为什么现在做 | 入口 | 完成判据 |
 |---|---|---|---|---|
-| P0 | 补 `.github/workflows/ci.yml` | 245 项测试与无漂移校验已可自动化，AC-008 目前无实现 | `.github/`、`backend/alembic.ini`、`cli validate/ddl` | PR 上矩阵绿；`alembic check` 与 `cli ddl` diff 作为门禁 |
-| P0 | 结构化 CMS 表单编辑器 + 差异视图 + 批量编辑 | 教研无法用 JSON 做日常编审，是上线前最大人力瓶颈 | `frontend/`、`api/admin.py` | 非工程人员可完成建稿→送审全流程 |
+| P0 | N1 CI 候选已编写，待 PR checks 验证 | 245 项测试与无漂移校验此前未自动化 | `.github/workflows/ci.yml`、Alembic、生成物 | 必须看到 quality、SQLite、PostgreSQL 16 全绿 |
+| P0 | N1 已有常用字段表单 + 差异视图；后续补批量编辑与浏览器 E2E | 降低日常 JSON 编辑门槛，保留高级模式 | `frontend/cms-editor.js`、`app.js`、docs/14 | 数学公式/375px/双审核人工验收后再宣告完成 |
 | P0 | 会话改 httpOnly Cookie + CSRF；限流换共享存储；判题改异步队列 | 多实例部署与真实用户的前置条件（当前 sessionStorage + 进程内限流） | `app.py`、`api/common.py`、`grading/` | 双实例压测通过且令牌不可被 JS 读取 |
 | P1 | 媒体上传 + 病毒扫描 + 短效签名 URL | FR-002 缺口（`assets` 表已建、无接口） | `services/storage.py`、`api/admin.py` | 上传→扫描→引用→签名访问闭环 |
 | P1 | 判题回归集扩到 300+ 人工标注 + L2 阈值标定 | 判题与去重质量缺客观基线 | `backend/tests/test_grading.py`、`services/ingestion.py` | 标注集与阈值报告入库 |
