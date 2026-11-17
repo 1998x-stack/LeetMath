@@ -6,3 +6,4 @@ sympy>=1.13
 jsonschema>=4.22
 pydantic>=2.7
 psycopg2-binary>=2.9   # PostgreSQL driver (production)
+redis>=5.0,<7
