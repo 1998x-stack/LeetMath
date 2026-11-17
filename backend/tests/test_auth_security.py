@@ -64,6 +64,11 @@ def test_cookie_writes_require_valid_csrf_and_same_origin(app):
         valid = browser.post("/api/v1/auth/login", json=login_body,
                              headers={"X-CSRF-Token": csrf, "Origin": "http://testserver"})
         assert valid.status_code == 200
+        revision_id = browser.get("/api/v1/problems/function-x-log-x-minus-a-x").json()["current_revision"]["id"]
+        write_body = {"problem_revision_id": revision_id}
+        assert browser.post("/api/v1/attempts", json=write_body).status_code == 403
+        assert browser.post("/api/v1/attempts", json=write_body,
+                            headers={"X-CSRF-Token": csrf}).status_code == 201
 
 
 def test_explicit_bearer_compatibility_endpoint_remains_available(app):
