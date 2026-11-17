@@ -24,7 +24,7 @@ POST /auth/logout     # 撤销当前 session，删除 session 与 CSRF cookie
 POST /auth/token      # 非浏览器 API 兼容入口，显式返回 Bearer token
 ~~~
 
-浏览器 SPA 使用 fetch credentials=same-origin，并在所有 unsafe methods 携带 X-CSRF-Token。Session Cookie：HttpOnly、SameSite=Lax、Path=/；生产 Secure，启用 Secure 时使用 __Host- 前缀且不设置 Domain。CSRF Cookie：JS 可读、SameSite=Strict、Path=/；生产 Secure。服务端比较 CSRF cookie/header、验证 HMAC，并在 Origin 存在时要求与请求源一致。显式 Authorization: Bearer 请求保留兼容性，SPA 不保存或发送 Bearer token。
+浏览器 SPA 使用 fetch credentials=same-origin，并在所有 cookie-auth unsafe methods 携带 X-CSRF-Token。POST /auth/token 是显式凭据换取 Bearer token 的非浏览器兼容入口，不使用 ambient cookie，因此不要求 CSRF header；若请求带 Origin，仍必须同源。Session Cookie：HttpOnly、SameSite=Lax、Path=/；生产 Secure，启用 Secure 时使用 __Host- 前缀且不设置 Domain。CSRF Cookie：JS 可读、SameSite=Strict、Path=/；生产 Secure。服务端比较 CSRF cookie/header、验证 HMAC，并在 Origin 存在时要求与请求源一致。显式 Authorization: Bearer 请求保留兼容性，SPA 不保存或发送 Bearer token。
 
 生产必须设置 LEETMATH_ENV=production、LEETMATH_COOKIE_SECURE=1、共享 LEETMATH_REDIS_URL，以及唯一且至少 32 字符的 LEETMATH_CSRF_SECRET。
 
