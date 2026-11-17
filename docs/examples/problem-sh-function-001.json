@@ -1,0 +1,290 @@
+{
+  "schema_version": "1.0.0",
+  "sample_only": true,
+  "problem": {
+    "id": "f5e5a151-24bc-473b-b0c2-8afca51b1001",
+    "display_id": "LM-SH-000001",
+    "slug": "function-x-log-x-minus-a-x",
+    "grade_band": "senior_high",
+    "subject": "mathematics"
+  },
+  "revision": {
+    "id": "7bf963cf-d872-4c26-8a9c-72cbeaa71001",
+    "revision_no": 1,
+    "status": "draft",
+    "locale": "zh-CN",
+    "title": "含参数函数的导数、单调性与不等式",
+    "shared_statement": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "spans": [
+            {
+              "type": "text",
+              "text": "已知函数"
+            },
+            {
+              "type": "inline_math",
+              "latex": "f(x)=x\\ln x-ax"
+            },
+            {
+              "type": "text",
+              "text": "，其中 "
+            },
+            {
+              "type": "inline_math",
+              "latex": "x>0,\\ a\\in\\mathbb R"
+            },
+            {
+              "type": "text",
+              "text": "。"
+            }
+          ]
+        }
+      ]
+    },
+    "content_metadata": {
+      "region_hints": [
+        "CN-SH"
+      ],
+      "grade_band": "senior_high",
+      "platform_difficulty": {
+        "value": 7,
+        "origin": "editorial_example",
+        "confidence": "illustrative"
+      },
+      "problem_type": [
+        "function",
+        "calculus",
+        "inequality"
+      ],
+      "curriculum_mappings": [
+        {
+          "curriculum_code": "CN-SH-SENIOR-HIGH",
+          "release_code": "DEMO-2026",
+          "knowledge_code": "DERIVATIVES",
+          "relation_type": "tested"
+        }
+      ],
+      "verified_exam": false
+    },
+    "parts": [
+      {
+        "id": "3d0108d3-dc46-4c44-a38f-cdc183e51001",
+        "logical_part_id": "d6d43969-b93a-452d-b271-3e731b6f1001",
+        "part_key": "1",
+        "display_order": 1,
+        "response_type": "expression",
+        "max_score": "3.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "求导函数 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "f'(x)"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "automatic",
+          "checker_type": "symbolic_equivalence",
+          "expected_latex": "\\ln x+1-a",
+          "canonical_expr": "log(x)+1-a",
+          "assumptions": {
+            "x": "positive",
+            "a": "real"
+          }
+        },
+        "rubric": {
+          "version": 1,
+          "criteria": [
+            {
+              "id": "P1-C1",
+              "description": "运用乘积求导公式",
+              "max_points": "1.00"
+            },
+            {
+              "id": "P1-C2",
+              "description": "得出等价的最终导数",
+              "max_points": "2.00"
+            }
+          ],
+          "policy": "for_step_submissions_only; single final expression correct may receive full marks"
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "sample_unreviewed",
+            "steps": [
+              "(x\\ln x)'=\\ln x+1",
+              "(-ax)'=-a",
+              "因此 f'(x)=\\ln x+1-a"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3d0108d3-dc46-4c44-a38f-cdc183e51002",
+        "logical_part_id": "d6d43969-b93a-452d-b271-3e731b6f1002",
+        "part_key": "2",
+        "display_order": 2,
+        "response_type": "derivation",
+        "max_score": "5.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "讨论函数的单调性，并求最小值。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "manual",
+          "checker_type": "rubric_manual",
+          "expected_latex": "x_0=e^{a-1};\\ f_{\\min}=-e^{a-1}",
+          "constraints": {
+            "x": "positive",
+            "a": "real"
+          }
+        },
+        "rubric": {
+          "version": 1,
+          "criteria": [
+            {
+              "id": "P2-C1",
+              "description": "由 f'(x)=0 得 x=e^{a-1}",
+              "max_points": "2.00"
+            },
+            {
+              "id": "P2-C2",
+              "description": "确定在 (0,e^{a-1}) 递减、(e^{a-1},+∞) 递增",
+              "max_points": "2.00"
+            },
+            {
+              "id": "P2-C3",
+              "description": "最小值为 -e^{a-1}",
+              "max_points": "1.00"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "worked",
+            "review_state": "sample_unreviewed",
+            "steps": [
+              "f'(x)=\\ln x+1-a",
+              "当 0<x<e^{a-1} 时 f'(x)<0；当 x>e^{a-1} 时 f'(x)>0",
+              "故在 x=e^{a-1} 处取得最小值 -e^{a-1}"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "3d0108d3-dc46-4c44-a38f-cdc183e51003",
+        "logical_part_id": "d6d43969-b93a-452d-b271-3e731b6f1003",
+        "part_key": "3",
+        "display_order": 3,
+        "response_type": "proof",
+        "max_score": "6.00",
+        "prompt": {
+          "blocks": [
+            {
+              "type": "paragraph",
+              "spans": [
+                {
+                  "type": "text",
+                  "text": "证明：对任意 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "x>0,\\ a\\in\\mathbb R"
+                },
+                {
+                  "type": "text",
+                  "text": "，有 "
+                },
+                {
+                  "type": "inline_math",
+                  "latex": "x\\ln x-ax\\geq-e^{a-1}"
+                },
+                {
+                  "type": "text",
+                  "text": "。"
+                }
+              ]
+            }
+          ]
+        },
+        "answer_spec": {
+          "spec_version": 1,
+          "grading_mode": "manual",
+          "checker_type": "rubric_manual",
+          "expected_latex": "x\\ln x-ax\\geq-e^{a-1}",
+          "equality_case": "x=e^{a-1}"
+        },
+        "rubric": {
+          "version": 1,
+          "criteria": [
+            {
+              "id": "P3-C1",
+              "description": "由导数证明函数在 x=e^{a-1} 取最小值",
+              "max_points": "3.00"
+            },
+            {
+              "id": "P3-C2",
+              "description": "讨论 x>0 与 a∈R 的适用域",
+              "max_points": "1.00"
+            },
+            {
+              "id": "P3-C3",
+              "description": "推导不等式并指出等号成立条件",
+              "max_points": "2.00"
+            }
+          ]
+        },
+        "solutions": [
+          {
+            "type": "proof",
+            "review_state": "sample_unreviewed",
+            "steps": [
+              "由第二问可知对任意 x>0，f(x)\\geq f(e^{a-1})",
+              "f(e^{a-1})=e^{a-1}(a-1)-a e^{a-1}=-e^{a-1}",
+              "所以 x\\ln x-ax\\geq-e^{a-1}，等号当且仅当 x=e^{a-1}"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "source_record_refs": [
+    {
+      "source_code": "leetmath-original-demo",
+      "external_id": "demo-func-001",
+      "external_revision": "1",
+      "record_kind": "original_example",
+      "note": "原创演示题，非真实上海高考试题"
+    }
+  ],
+  "rights_policy_ref": "sample-original-internal-review-required",
+  "assets": [],
+  "lineage": []
+}

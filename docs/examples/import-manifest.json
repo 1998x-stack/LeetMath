@@ -1,0 +1,27 @@
+{
+  "manifest_schema_version": "1.0",
+  "sample_only": true,
+  "source_code": "leetmath-original-demo",
+  "dataset_id": "sh-high-function-demo",
+  "dataset_version": "2026-11-17-v1",
+  "locale": "zh-CN",
+  "rights_grant_ref": "sample-original-internal-review-required",
+  "input_format": "jsonl",
+  "adapter_version": "demo-jsonl-v1",
+  "normalizer_version": "math-normalizer-v1",
+  "dry_run": true,
+  "files": [
+    {
+      "path": "demo-source.jsonl",
+      "sha256": "65959be47f07fad6649ab974dec42d11ad55bcdfc32582ed65f7e57d6849395f",
+      "record_count": 1
+    }
+  ],
+  "curriculum_hints": [
+    {
+      "system": "CN-SH-SENIOR-HIGH",
+      "release": "DEMO-2026"
+    }
+  ],
+  "notes": "演示配置：使用前须真实创建 source 与 rights_grant 并按实际 adapter 校验；不代表已获任何外部考试版权"
+}

@@ -1,0 +1,263 @@
+openapi: 3.1.0
+info:
+  title: LeetMath Phase 1 Public API (Draft)
+  version: 0.1.0
+  description: |
+    概念契约草案，不代表接口已实现。所有公开内容必须通过 rights gate。
+servers:
+  - url: /api/v1
+tags:
+  - name: Catalog
+  - name: Learning
+  - name: Admin
+paths:
+  /problems:
+    get:
+      tags: [Catalog]
+      operationId: listProblems
+      summary: 搜索公开题目
+      parameters:
+        - name: query
+          in: query
+          schema: {type: string}
+        - name: grade_band
+          in: query
+          schema: {type: string}
+        - name: region
+          in: query
+          schema: {type: string}
+        - name: difficulty_min
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 10}
+        - name: difficulty_max
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 10}
+        - name: cursor
+          in: query
+          schema: {type: string}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+      responses:
+        '200':
+          description: 检索结果
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, has_more]
+                properties:
+                  items: {type: array, items: {$ref: '#/components/schemas/ProblemSummary'}}
+                  next_cursor: {type: [string, 'null']}
+                  has_more: {type: boolean}
+        '422': {$ref: '#/components/responses/ApiError'}
+  /problems/{slug}:
+    get:
+      tags: [Catalog]
+      operationId: getProblem
+      summary: 读取当前合法公开发布的题目版本
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: 题目详情（不含隐藏评分规则）
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProblemDetail'}
+        '404': {$ref: '#/components/responses/ApiError'}
+  /attempts:
+    post:
+      tags: [Learning]
+      operationId: createAttempt
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [problem_revision_id]
+              properties:
+                problem_revision_id: {type: string, format: uuid}
+                mode: {type: string, enum: [practice], default: practice}
+      responses:
+        '201':
+          description: 新建会话
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attempt_id, problem_revision_id]
+                properties:
+                  attempt_id: {type: string, format: uuid}
+                  problem_revision_id: {type: string, format: uuid}
+        '401': {$ref: '#/components/responses/ApiError'}
+        '409': {$ref: '#/components/responses/ApiError'}
+  /attempts/{attempt_id}/submissions:
+    post:
+      tags: [Learning]
+      operationId: submitPart
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {type: string, minLength: 8, maxLength: 128}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SubmitRequest'}
+      responses:
+        '202':
+          description: 提交成功且待评测
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubmitReceipt'}
+        '409': {$ref: '#/components/responses/ApiError'}
+        '422': {$ref: '#/components/responses/ApiError'}
+        '429': {$ref: '#/components/responses/ApiError'}
+  /submissions/{id}:
+    get:
+      tags: [Learning]
+      operationId: getSubmission
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: 本人的提交及最新评测
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, revision_part_id, status]
+                properties:
+                  id: {type: string, format: uuid}
+                  revision_part_id: {type: string, format: uuid}
+                  status: {type: string, enum: [queued, running, accepted, rejected, partial, invalid_response, pending_review, engine_error, cancelled]}
+                  score: {type: [string, 'null']}
+                  evaluation_id: {type: [string, 'null'], format: uuid}
+        '403': {$ref: '#/components/responses/ApiError'}
+        '404': {$ref: '#/components/responses/ApiError'}
+  /admin/imports:
+    post:
+      tags: [Admin]
+      operationId: createImportBatch
+      security: [{bearerAuth: []}]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {type: string, minLength: 8}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [manifest_uri]
+              properties:
+                manifest_uri: {type: string}
+                dry_run: {type: boolean, default: true}
+      responses:
+        '202':
+          description: 批次已创建
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [batch_id, status]
+                properties:
+                  batch_id: {type: string, format: uuid}
+                  status: {type: string}
+        '403': {$ref: '#/components/responses/ApiError'}
+        '409': {$ref: '#/components/responses/ApiError'}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  schemas:
+    ProblemSummary:
+      type: object
+      required: [id, display_id, slug, title, part_count]
+      properties:
+        id: {type: string, format: uuid}
+        display_id: {type: string}
+        slug: {type: string}
+        title: {type: string}
+        grade_band: {type: string}
+        difficulty: {type: [integer, 'null'], minimum: 1, maximum: 10}
+        part_count: {type: integer, minimum: 1}
+    ProblemDetail:
+      type: object
+      required: [id, display_id, slug, current_revision]
+      properties:
+        id: {type: string, format: uuid}
+        display_id: {type: string}
+        slug: {type: string}
+        current_revision:
+          type: object
+          required: [id, revision_no, title, parts]
+          properties:
+            id: {type: string, format: uuid}
+            revision_no: {type: integer}
+            title: {type: string}
+            shared_statement: {type: object, additionalProperties: true}
+            parts:
+              type: array
+              items:
+                type: object
+                required: [id, display_order, response_type, max_score]
+                properties:
+                  id: {type: string, format: uuid}
+                  display_order: {type: integer}
+                  response_type: {type: string}
+                  max_score: {type: string}
+                  prompt: {type: object, additionalProperties: true}
+    SubmitRequest:
+      type: object
+      required: [revision_part_id, response]
+      properties:
+        revision_part_id: {type: string, format: uuid}
+        response:
+          type: object
+          required: [type, input]
+          properties:
+            type: {type: string}
+            input: {type: string}
+    SubmitReceipt:
+      type: object
+      required: [submission_id, evaluation_id, status]
+      properties:
+        submission_id: {type: string, format: uuid}
+        evaluation_id: {type: string, format: uuid}
+        status: {type: string, enum: [queued, running, accepted, rejected, partial, pending_review]}
+        poll_url: {type: string}
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code: {type: string}
+            message: {type: string}
+            request_id: {type: string}
+            details: {type: object, additionalProperties: true}
+  responses:
+    ApiError:
+      description: 统一 API 错误
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
