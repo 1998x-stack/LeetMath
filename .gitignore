@@ -31,10 +31,21 @@ __pycache__/
 venv/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local runtime state: SQLite dev DB + content-addressed object storage (LEETMATH_STORAGE_DIR)
+var/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 # Local database / dumps
 *.dump
 *.sql.gz
+*.log
 pgdata/
 
 # Applied patch artifacts
