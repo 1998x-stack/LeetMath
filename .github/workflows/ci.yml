@@ -59,12 +59,17 @@ jobs:
           PYTHONPATH: backend
         run: |
           python - <<'PY'
+          import difflib
           import json
           from pathlib import Path
           from leetmath.app import create_app
           expected = json.loads(Path("docs/generated/openapi.json").read_text("utf-8"))
           actual = create_app().openapi()
-          assert actual == expected, "OpenAPI drift: regenerate docs/generated/openapi.json"
+          if actual != expected:
+              expected_text = json.dumps(expected, ensure_ascii=False, indent=1).splitlines()
+              actual_text = json.dumps(actual, ensure_ascii=False, indent=1).splitlines()
+              print("\\n".join(difflib.unified_diff(expected_text, actual_text, fromfile="checked-in", tofile="runtime")))
+              raise AssertionError("OpenAPI drift: update docs/generated/openapi.json")
           print(f"OpenAPI matches: {len(actual['paths'])} paths")
           PY
       - name: Install Chromium for Playwright
