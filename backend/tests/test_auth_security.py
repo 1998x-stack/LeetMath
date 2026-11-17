@@ -66,14 +66,15 @@ def test_cookie_writes_require_valid_csrf_and_same_origin(app):
         assert valid.status_code == 200
 
 
-def test_explicit_bearer_compatibility_endpoint_remains_available(client):
-    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
-    response = client.post("/api/v1/auth/token",
-                           json={"username": "student", "password": "student-pass-123"},
-                           headers={"X-CSRF-Token": csrf})
-    assert response.status_code == 200
-    assert response.json()["token"]
-    assert client.get("/api/v1/me", headers={"Authorization": "Bearer " + response.json()["token"]}).status_code == 200
+def test_explicit_bearer_compatibility_endpoint_remains_available(app):
+    # This endpoint is for non-browser clients and does not rely on ambient cookie auth.
+    with TestClient(app) as api_client:
+        response = api_client.post("/api/v1/auth/token",
+                                   json={"username": "student", "password": "student-pass-123"})
+        assert response.status_code == 200
+        assert response.json()["token"]
+        assert api_client.get("/api/v1/me",
+                              headers={"Authorization": "Bearer " + response.json()["token"]}).status_code == 200
 
 def test_reauthentication_rotates_cookie_and_revokes_previous_session(app):
     with TestClient(app) as browser:
