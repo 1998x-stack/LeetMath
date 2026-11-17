@@ -146,6 +146,8 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.goto(live_server + "/admin/problems", wait_until="networkidle", timeout=30000)
         editor_page.get_by_role("button", name="新建题目").click()
         editor_page.get_by_label("题目标题").wait_for(state="visible", timeout=15000)
+        desktop_sizes = _no_horizontal_overflow(editor_page)
+        assert desktop_sizes["document"] <= desktop_sizes["width"], f"desktop CMS overflow: {desktop_sizes}"
         revision_id = re.search(r"/admin/edit/([^/?#]+)", editor_page.url).group(1)
 
         # Inject a valid table block through advanced JSON, switch to the form and back,
@@ -176,6 +178,24 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.locator(".cms-preview .katex").first.wait_for(state="visible", timeout=15000)
         assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
 
+        # Prove that a rubric mismatch is surfaced as a blocking preflight issue,
+        # then repair it before the draft is allowed into review.
+        editor_page.get_by_label("编辑模式").select_option(label="高级 JSON")
+        document = json.loads(raw.input_value())
+        document["revision"]["parts"][0]["rubric"] = {
+            "version": 1,
+            "criteria": [{"id": "E2E-C1", "description": "故意不守恒的测试评分点", "max_points": "1.00"}],
+        }
+        raw.fill(json.dumps(document, ensure_ascii=False, indent=2))
+        editor_page.get_by_label("编辑模式").select_option(label="结构化表单")
+        editor_page.get_by_role("button", name="预检当前内容").click()
+        editor_page.get_by_text("存在阻断项", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.get_by_text("RUBRIC_SUM_MISMATCH", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.get_by_label("编辑模式").select_option(label="高级 JSON")
+        document = json.loads(raw.input_value())
+        document["revision"]["parts"][0].pop("rubric", None)
+        raw.fill(json.dumps(document, ensure_ascii=False, indent=2))
+        editor_page.get_by_label("编辑模式").select_option(label="结构化表单")
         editor_page.get_by_role("button", name="预检当前内容").click()
         editor_page.get_by_text("无阻断项", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.get_by_role("button", name="保存草稿").click()
@@ -218,6 +238,11 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.get_by_text("相对上一版本的差异", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.get_by_label("题目标题").fill("N2 浏览器验收：含参数函数（修订）")
         editor_page.get_by_text("相对上一版本的差异 · 1 处", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.set_viewport_size({"width": 375, "height": 812})
+        cms_sizes = _no_horizontal_overflow(editor_page)
+        assert cms_sizes["document"] <= cms_sizes["width"], f"mobile CMS document overflow: {cms_sizes}"
+        assert cms_sizes["body"] <= cms_sizes["width"], f"mobile CMS body overflow: {cms_sizes}"
+        editor_page.screenshot(path=str(ARTIFACTS / "teacher-cms-mobile-375.png"), full_page=True)
 
         # Public content uses text nodes and KaTeX's trust=false rendering.
         editor_page.goto(live_server + "/problems/" + slug, wait_until="networkidle")
