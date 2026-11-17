@@ -59,7 +59,8 @@ table.list th { background: #fafafa; color: var(--muted); font-weight: 600; font
 table.list tr:last-child td { border-bottom: none; }
 .diff { font-variant-numeric: tabular-nums; font-weight: 600; }
 .diff.e { color: var(--ok); } .diff.m { color: var(--warn); } .diff.h { color: var(--bad); }
-.statement { min-width: 0; max-width: 100%; overflow-wrap: anywhere; font-size: 18px; line-height: 1.9; }\n.inline-math { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
+.statement { min-width: 0; max-width: 100%; overflow-wrap: anywhere; font-size: 18px; line-height: 1.9; }
+.inline-math { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
 .statement .katex { font-size: 1.05em; }
 .display-math { overflow-x: auto; padding: 6px 0; text-align: center; }
 .partnav { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
