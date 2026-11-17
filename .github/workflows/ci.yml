@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Contract, generated artifacts, JS and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Python dev dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Syntax and static analysis baseline
+        run: |
+          python -m compileall -q backend/leetmath backend/tests
+          ruff check --select E4,E7,E9,F821,F822,F823 backend/leetmath backend/tests
+      - name: Contract fixtures and golden cases
+        env:
+          PYTHONPATH: backend
+        run: python -m leetmath.cli validate fixtures/positive
+      - name: Generated SQL is reproducible
+        env:
+          PYTHONPATH: backend
+        run: |
+          python -m leetmath.cli ddl --dialect postgresql > /tmp/schema.generated.sql
+          diff -u docs/generated/schema.postgresql.sql /tmp/schema.generated.sql
+      - name: OpenAPI matches live application
+        env:
+          PYTHONPATH: backend
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from leetmath.app import create_app
+          expected = json.loads(Path("docs/generated/openapi.json").read_text("utf-8"))
+          actual = create_app().openapi()
+          assert actual == expected, "OpenAPI drift: regenerate docs/generated/openapi.json"
+          print(f"OpenAPI matches: {len(actual['paths'])} paths")
+          PY
+      - name: Browser script syntax and CMS model tests
+        run: |
+          node --check frontend/app.js
+          node --check frontend/cms-editor.js
+          node --test frontend/tests/*.test.cjs
+
+  databases:
+    name: Tests and Alembic (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, postgres16]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: leetmath
+          POSTGRES_PASSWORD: leetmath
+          POSTGRES_DB: leetmath
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U leetmath -d leetmath"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install Python dev dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Choose isolated database
+        shell: bash
+        run: |
+          if [[ "${{ matrix.database }}" == "postgres16" ]]; then
+            echo "LEETMATH_DATABASE_URL=postgresql+psycopg2://leetmath:leetmath@127.0.0.1:5432/leetmath" >> "$GITHUB_ENV"
+            echo "LEETMATH_TEST_DATABASE_URL=postgresql+psycopg2://leetmath:leetmath@127.0.0.1:5432/leetmath" >> "$GITHUB_ENV"
+          else
+            echo "LEETMATH_DATABASE_URL=sqlite:////tmp/leetmath-ci.db" >> "$GITHUB_ENV"
+            echo "LEETMATH_TEST_DATABASE_URL=sqlite:////tmp/leetmath-ci-test.db" >> "$GITHUB_ENV"
+          fi
+      - name: Migrate, check ORM drift, downgrade
+        working-directory: backend
+        run: |
+          alembic upgrade head
+          alembic check
+          alembic downgrade base
+      - name: Test suite
+        working-directory: backend
+        run: python -m pytest -q
