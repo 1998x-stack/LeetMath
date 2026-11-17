@@ -199,6 +199,10 @@ def test_security_headers_and_error_shape(client):
 
 def test_register_login(client):
     name = "u" + uuid.uuid4().hex[:8]
-    r = client.post("/api/v1/auth/register", json={"username": name, "password": "longenough1"})
+    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    headers = {"X-CSRF-Token": csrf}
+    r = client.post("/api/v1/auth/register", json={"username": name, "password": "longenough1"}, headers=headers)
     assert r.status_code == 201 and r.json()["user"]["roles"] == ["student"]
-    assert client.post("/api/v1/auth/login", json={"username": name, "password": "wrongwrong"}).status_code == 401
+    assert "token" not in r.json()
+    bad = client.post("/api/v1/auth/login", json={"username": name, "password": "wrongwrong"}, headers=headers)
+    assert bad.status_code == 401
