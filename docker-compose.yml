@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: leetmath
+      POSTGRES_PASSWORD: leetmath-dev-only   # change for any non-local deployment
+      POSTGRES_DB: leetmath
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leetmath"]
+      interval: 3s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      db: {condition: service_healthy}
+    environment:
+      LEETMATH_DATABASE_URL: postgresql+psycopg2://leetmath:leetmath-dev-only@db:5432/leetmath
+      LEETMATH_AUTO_CREATE: "0"
+      LEETMATH_STORAGE_DIR: /app/var/objects
+    ports: ["8000:8000"]
+    volumes: [objects:/app/var/objects]
+volumes:
+  pgdata: {}
+  objects: {}
