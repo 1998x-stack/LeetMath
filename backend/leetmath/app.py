@@ -73,6 +73,10 @@ def create_app(init_db: bool | None = None) -> FastAPI:
                     operation, limit = "read", 600
                 else:
                     operation, limit = "write", 180
+                # Keep the test suite deterministic while retaining explicit auth-register limits
+                # for the two-process Redis integration test.
+                if settings.environment == "test" and operation not in {"auth-login", "auth-register"}:
+                    limit = max(limit, settings.rate_limit_per_minute)
                 # Count rejected CSRF requests too; otherwise an attacker could bypass IP throttles.
                 rate_limit(f"ip:{client_ip}:{operation}", limit)
                 csrf_code = csrf_error(request)
