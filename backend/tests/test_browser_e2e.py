@@ -172,7 +172,6 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.get_by_label("正文 #1").first.fill(xss_text)
         assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
         assert editor_page.evaluate("() => window.__leetmathXss || null") is None
-        editor_page.get_by_label("正文 #1").first.fill("已知函数 ")
         editor_page.get_by_label("行内公式 LaTeX #2").fill(r"\frac{x^2+1}{x-1}")
         editor_page.get_by_label("参考答案 · expected").fill("2x - 2")
         editor_page.locator(".cms-preview .katex").first.wait_for(state="visible", timeout=15000)
@@ -249,6 +248,9 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.locator(".katex").first.wait_for(state="visible", timeout=15000)
         assert editor_page.locator('img[src="x"]').count() == 0
         assert editor_page.evaluate("() => window.__leetmathXss || null") is None
+        assert editor_page.evaluate(
+            "() => document.body.textContent.includes('E2E 正文 <img src=x onerror=window.__leetmathXss=1>')"
+        )
         editor_page.set_viewport_size({"width": 375, "height": 812})
         sizes = _no_horizontal_overflow(editor_page)
         assert sizes["document"] <= sizes["width"], f"mobile CMS/public page overflow: {sizes}"
