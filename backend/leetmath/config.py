@@ -28,6 +28,10 @@ class Settings:
     # Workflow policy (docs/08 §2): math and rights reviewers must be different people.
     require_distinct_reviewers: bool = os.environ.get("LEETMATH_DISTINCT_REVIEWERS", "1") == "1"
     rate_limit_per_minute: int = int(os.environ.get("LEETMATH_RATE_LIMIT_PER_MIN", "120"))
+    environment: str = os.environ.get("LEETMATH_ENV", "development").lower()
+    redis_url: str | None = os.environ.get("LEETMATH_REDIS_URL") or None
+    cookie_secure: bool = os.environ.get("LEETMATH_COOKIE_SECURE", "1" if os.environ.get("LEETMATH_ENV", "development").lower() == "production" else "0") == "1"
+    csrf_secret: str = os.environ.get("LEETMATH_CSRF_SECRET", "leetmath-dev-only-change-this-secret")
 
 
 settings = Settings()
