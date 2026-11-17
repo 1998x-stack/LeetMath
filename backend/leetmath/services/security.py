@@ -56,6 +56,9 @@ def csrf_error(request: Request) -> str | None:
         return "CSRF_ORIGIN_MISMATCH"
     if request.method.upper() in {"GET", "HEAD", "OPTIONS", "TRACE"}:
         return None
+    if request.url.path == "/api/v1/auth/token":
+        # Explicit API token issuance returns a bearer token and does not authenticate via ambient cookies.
+        return None
     authorization = request.headers.get("authorization", "")
     if authorization.lower().startswith("bearer "):
         # Explicit Authorization headers are not ambient browser credentials.
