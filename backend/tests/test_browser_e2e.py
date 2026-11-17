@@ -78,6 +78,7 @@ def _save_failure(page, name):
 def test_mobile_problem_page_renders_katex_without_viewport_overflow(live_server):
     manager, playwright, browser = _browser()
     context = browser.new_context(viewport={"width": 375, "height": 812}, device_scale_factor=1)
+    ARTIFACTS.mkdir(parents=True, exist_ok=True)
     context.tracing.start(screenshots=True, snapshots=True, sources=True)
     page = context.new_page()
     try:
@@ -124,7 +125,7 @@ def test_teacher_login_uses_httponly_cookie_and_structured_cms_renders_formula(l
         assert session["sameSite"].lower() == "lax"
         assert csrf["httpOnly"] is False
         assert page.evaluate("() => document.cookie").find("leetmath_session") == -1
-        assert page.evaluate("() => Object.keys(sessionStorage).concat(Object.keys(localStorage))").length == 0
+        assert len(page.evaluate("() => Object.keys(sessionStorage).concat(Object.keys(localStorage))")) == 0
 
         page.goto(live_server + "/admin/problems", wait_until="networkidle", timeout=30000)
         page.get_by_role("button", name="新建题目").click()
