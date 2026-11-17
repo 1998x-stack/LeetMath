@@ -116,7 +116,7 @@ def test_mobile_problem_page_renders_katex_without_viewport_overflow(live_server
 
 
 def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
-    manager, browser = _browser()
+    playwright, browser = _browser()
     context = browser.new_context(viewport={"width": 1280, "height": 900})
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     context.tracing.start(screenshots=True, snapshots=True, sources=True)
@@ -285,11 +285,11 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         rights_context.close()
         context.close()
         browser.close()
-        manager.stop()
+        playwright.stop()
 
 
 def test_two_editors_receive_precondition_failure_without_losing_input(live_server):
-    manager, browser = _browser()
+    playwright, browser = _browser()
     first_context = browser.new_context(viewport={"width": 1280, "height": 900})
     second_context = browser.new_context(viewport={"width": 1280, "height": 900})
     first_page = first_context.new_page()
@@ -327,4 +327,4 @@ def test_two_editors_receive_precondition_failure_without_losing_input(live_serv
         first_context.close()
         second_context.close()
         browser.close()
-        manager.stop()
+        playwright.stop()
