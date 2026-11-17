@@ -219,6 +219,7 @@ create_app() 在 production 启动时检查 Secure Cookie、Redis URL 和 CSRF s
 ## 6. 回滚与兼容
 
 - 现有 AuthSession 表结构不变，不需要迁移；新旧认证共用 token hash、过期与撤销字段。
+- 新版本第一次对真实用户开放前，应安排一次旧会话失效：在维护窗口执行 `UPDATE auth_sessions SET revoked = TRUE WHERE revoked = FALSE;`，所有用户需要重新登录。该操作不可逆地撤销现有会话，不要在日常启动时自动执行。
 - 非浏览器 Bearer API 仍可使用；浏览器 SPA 只走 Cookie。
 - 若需回滚前端，应同时回滚认证 API 与 CSRF middleware，不能只回滚 app.js，否则浏览器写请求会被拒绝。
 - 若 Redis 故障，生产保持 503 并恢复 Redis；禁止通过关闭限流或开启本地 fallback 规避故障。
