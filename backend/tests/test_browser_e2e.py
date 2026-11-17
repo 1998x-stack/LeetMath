@@ -126,6 +126,12 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
     reviewer_page = reviewer_context.new_page()
     rights_page = rights_context.new_page()
     try:
+        editor_page.goto(live_server + "/login", wait_until="networkidle")
+        editor_page.evaluate(
+            "() => { sessionStorage.setItem('lm_token', 'legacy-token'); localStorage.setItem('lm_token', 'legacy-token'); }"
+        )
+        editor_page.reload(wait_until="networkidle")
+        assert len(editor_page.evaluate("() => Object.keys(sessionStorage).concat(Object.keys(localStorage))")) == 0
         _login(editor_page, live_server, "editor", "editor-pass-123")
         cookies = context.cookies()
         session = next(cookie for cookie in cookies if cookie["name"] == "leetmath_session")
