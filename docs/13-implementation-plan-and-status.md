@@ -2,7 +2,7 @@
 
 版本 v0.2 · 2026-11-17 · 状态：**可运行 MVP（本地/试点环境）**，不是生产上线。
 
-> **2026-11-17 N1 增补**：本分支新增 CI 质量门禁、结构化 CMS 编辑、版本差异与 Node 模型测试；详情见 [docs/14](14-next-iteration-ci-and-cms.md)。本文件中 245/245 是先前 HANDOFF 的实测记录，新增 CI 结果不能据此推定为绿。Playwright 和生产安全仍未验收。
+> **2026-11-17 N1 增补**：本分支新增 CI 质量门禁、结构化 CMS 编辑、版本差异与 Node 模型测试；详情见 [docs/14](14-next-iteration-ci-and-cms.md)。本文件中 245/245 是先前 HANDOFF 的实测记录，新增 CI 已在 PR #2 的 [Run #44077042871](https://github.com/1998x-stack/LeetMath/actions/runs/44077042871) 取得 quality、SQLite、PostgreSQL 16 全绿（各数据库 245/245，新增 Node CMS 5/5）。Playwright 和生产安全仍未验收。
 
 本文件记录基于 00–12 号设计文档与 Phase 1.5 专项完成的第一版实现：分步计划、架构、各 PRD 条目的实现位置、验收用例与测试的对应关系，以及**尚未完成**的事项。
 
@@ -77,7 +77,7 @@ PostgreSQL 15+/16（生产）| SQLite（开发/测试）· 对象存储（本地
 | AC-005 未授权/撤回内容不可达 | `test_ac005_retracted_content_unreachable`、`test_rights_expiry_*`、`test_rights_hold_and_release` |
 | AC-006 写接口校验角色、重大操作有审计 | `test_students_and_editors_cannot_publish`、`test_audit_log_*`、`test_manifest_schema_and_roles` |
 | AC-007 筛选分页稳定、公式渲染 | `test_ac007_stable_pagination_and_filters`、`test_pagination_updated_desc_cursor`；Playwright 桌面/375px 截图检查 |
-| AC-008 迁移/幂等/访问控制/契约进 CI | N1 已在本分支增加 `.github/workflows/ci.yml`（SQLite + PostgreSQL 16 测试、alembic upgrade/check/downgrade、DDL/OpenAPI 漂移），是否通过请看 PR checks；另含 Node 模型测试 |
+| AC-008 迁移/幂等/访问控制/契约进 CI | N1 已在本分支增加 `.github/workflows/ci.yml`（SQLite + PostgreSQL 16 测试、alembic upgrade/check/downgrade、DDL/OpenAPI 漂移），首轮 PR checks 三 job 全绿；另含 Node 模型测试 |
 | docs/05 §10 样本 A–F | `test_ingestion::test_sample_a…f` 一一对应 |
 | docs/06 §8 判题样例 1–10 | `test_grading::EXPR` 前 10 行 + `test_engine_timeout_is_not_a_math_error` + `INVALID` |
 | docs/08 §9 CMS 用例 | `test_reviewer_cannot_approve_own_content`、`test_optimistic_lock_edit_conflict`、`test_cannot_publish_before_rights_review` 等 |
