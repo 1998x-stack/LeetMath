@@ -73,3 +73,20 @@ def test_explicit_bearer_compatibility_endpoint_remains_available(client):
     assert response.status_code == 200
     assert response.json()["token"]
     assert client.get("/api/v1/me", headers={"Authorization": "Bearer " + response.json()["token"]}).status_code == 200
+
+def test_reauthentication_rotates_cookie_and_revokes_previous_session(app):
+    with TestClient(app) as browser:
+        csrf = browser.get("/api/v1/auth/csrf").json()["csrf_token"]
+        body = {"username": "student", "password": "student-pass-123"}
+        first = browser.post("/api/v1/auth/login", json=body, headers={"X-CSRF-Token": csrf})
+        assert first.status_code == 200
+        old_token = browser.cookies.get(session_cookie_name())
+        second = browser.post("/api/v1/auth/login", json=body, headers={"X-CSRF-Token": csrf})
+        assert second.status_code == 200
+        new_token = browser.cookies.get(session_cookie_name())
+        assert old_token and new_token and old_token != new_token
+        assert browser.get("/api/v1/me").status_code == 200
+        with TestClient(app) as stale_client:
+            stale = stale_client.get("/api/v1/me", headers={"Authorization": "Bearer " + old_token})
+            assert stale.status_code == 401
+
