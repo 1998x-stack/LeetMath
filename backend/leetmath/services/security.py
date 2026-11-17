@@ -63,6 +63,12 @@ def csrf_error(request: Request) -> str | None:
     if authorization.lower().startswith("bearer "):
         # Explicit Authorization headers are not ambient browser credentials.
         return None
+    from ..services.security import session_cookie_name
+    has_browser_session = bool(request.cookies.get(session_cookie_name()))
+    if request.url.path not in {"/api/v1/auth/login", "/api/v1/auth/register"} and not has_browser_session:
+        # Without an ambient browser session there is no cookie-auth CSRF surface;
+        # let the endpoint return its normal 401/403 authorization result.
+        return None
     cookie_token = request.cookies.get(csrf_cookie_name())
     header_token = request.headers.get("x-csrf-token")
     if not cookie_token or not header_token:
