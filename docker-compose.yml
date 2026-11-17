@@ -10,16 +10,30 @@ services:
       test: ["CMD-SHELL", "pg_isready -U leetmath"]
       interval: 3s
       retries: 20
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 20
   app:
     build: .
     depends_on:
       db: {condition: service_healthy}
+      redis: {condition: service_healthy}
     environment:
       LEETMATH_DATABASE_URL: postgresql+psycopg2://leetmath:leetmath-dev-only@db:5432/leetmath
       LEETMATH_AUTO_CREATE: "0"
+      LEETMATH_ENV: development
+      LEETMATH_COOKIE_SECURE: "0"
+      LEETMATH_REDIS_URL: redis://redis:6379/0
+      LEETMATH_CSRF_SECRET: leetmath-compose-dev-only-change-this-secret
       LEETMATH_STORAGE_DIR: /app/var/objects
     ports: ["8000:8000"]
     volumes: [objects:/app/var/objects]
 volumes:
   pgdata: {}
   objects: {}
+  redisdata: {}
