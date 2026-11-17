@@ -117,7 +117,7 @@ def login(body: Credentials, request: Request, response: Response, s: Session = 
 @router.post("/auth/token")
 def issue_api_token(body: Credentials, s: Session = Depends(db)):
     """Explicit non-browser compatibility endpoint. Never use from the SPA."""
-    user = _authenticate(s, body, "api-token")
+    user = _authenticate(s, body, "login")
     return {"token": issue_token(s, user), "user": user_out(user)}
 
 
