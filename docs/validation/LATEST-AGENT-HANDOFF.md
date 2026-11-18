@@ -40,7 +40,9 @@
 | Functional sweep (real browser) | `/tmp/lm-student-acceptance.py http://127.0.0.1:18000` | 46/46 |
 | Security probes | `/tmp/lm-security-probe.py http://127.0.0.1:18000` | 17/17 |
 
-Blockers: **none for N2 acceptance**. Remote CI for PR #6/#5 is the remaining gate.
+Blockers: **none for N2 acceptance.** Remote CI for PR #6 is green (run `44232322979`: quality/browser `13 passed`,
+sqlite `255 passed, 3 skipped`, postgres16 `255 passed, 3 skipped`). PR #5 still carries its older red run until this
+branch is folded into it.
 
 ## Next actions (ordered)
 

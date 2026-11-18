@@ -69,7 +69,7 @@ N2 完成判据（docs/15 §7）逐条对应：
 
 | 判据 | 证据 | 状态 |
 |---|---|---|
-| Actions quality / SQLite / PG16 全绿 | 本机三组全绿；远端 CI 待本 PR 触发 | 本机通过 |
+| Actions quality / SQLite / PG16 全绿 | 本机三组全绿 + **远端 CI run 44232322979 三个 job 全 pass**（browser `13 passed, 1 warning in 20.24s`；sqlite `255 passed, 3 skipped`；postgres16 `255 passed, 3 skipped`；`OpenAPI matches: 68 paths`） | 通过 |
 | Chromium desktop + 375px 全通过 | `13 passed` + 响应式 24/24 | 通过 |
 | editor→reviewer→rights→publish 闭环 | `test_teacher_full_review_publish_revision_and_cookie_flow` | 通过 |
 | table block 无损 / published 只读 / 新 revision diff 正确 | 同上 + 修复 LM-002 | 通过 |
