@@ -3,19 +3,42 @@
 > Machine-readable entry point for the next agent. Read this first, then the full reports in
 > `docs/validation/`. Written by the Pi local-validation run of 2026-11-18.
 
-## Git
+## Current GitHub integration state (verified 2026-11-18)
 
-| Field | Value |
+| Field | Verified value |
 |---|---|
 | Repo | https://github.com/1998x-stack/LeetMath |
-| Acceptance baseline (N2) | `feat/n2-e2e-cookie-redis` @ `08caab892daded21139a91b05fa461460d7ff0e1` (PR #5, open) |
-| `origin/main` at start | `d8b09f813b44e2620084e2cf6e246ad6ac56f19f` (PR #2 merged) |
-| Work branch | `fix/pi-local-n2-validation-20261118` (pushed) |
-| PR | https://github.com/1998x-stack/LeetMath/pull/6 — **stacked on #5, base = `feat/n2-e2e-cookie-redis`** (do not retarget to main while #5 is open) |
-| Fix commits | `bce9ac2` test(e2e) · `27a5485` fix(cms) regions/state hooks · `0401d97` fix(auth) logout+CSRF · `e40e9c8` fix(cms) diff paths · `9031b6c` fix(ui) overflow-wrap · `8a15ffc` chore(gitignore) |
-| Uncommitted | nothing (working tree clean) |
+| `main` after N2.1 auth fix | `e4dc63de75ca1e846a6f70bc97fced8d66925b5d` |
+| PR #6 — Pi local fixes | **MERGED** (squash into N2 feature branch) → `1d642752db60405414cab3d265375ba535083ad4` |
+| PR #5 — N2 browser/CSRF/Redis | **MERGED** (squash into main) → `b7dcab7ef26c93822b59539b7fa2ead85da89c46` |
+| PR #7 — CI split | **MERGED** (squash into main) → `56ad71b9c53456a2e27aae39c13ae0ddaf8d3294` |
+| PR #8 — logout failure | **MERGED** (squash into main) → `e4dc63de75ca1e846a6f70bc97fced8d66925b5d` |
+| Next major work | [Issue #9](https://github.com/1998x-stack/LeetMath/issues/9) — N3/P0 proof/derivation teacher manual grading workflow |
+| PR #5 post-fix CI | [44236625858](https://github.com/1998x-stack/LeetMath/actions/runs/44236625858) — **3 jobs green** |
+| Main N2 push CI | [44236829743](https://github.com/1998x-stack/LeetMath/actions/runs/44236829743) — **success** |
+| PR #7 CI | [44236944304](https://github.com/1998x-stack/LeetMath/actions/runs/44236944304) — **4 jobs green** |
+| PR #8 CI | [44237215573](https://github.com/1998x-stack/LeetMath/actions/runs/44237215573) — **4 jobs green**, Chromium **14 passed** |
+| `main` push CI after #7 | [44237189022](https://github.com/1998x-stack/LeetMath/actions/runs/44237189022) — **success** |
+| `main` push CI after #8 | [44237425726](https://github.com/1998x-stack/LeetMath/actions/runs/44237425726) — **in progress when this note was authored; recheck status** |
 
-## Local run state
+The old Pi work branch `fix/pi-local-n2-validation-20261118` at `04ab81d` and original N2 head
+`08caab8` are **historical baselines, not active merge targets**. Do **not** reopen/merge
+PR #5 or #6. Before making new changes, fetch `origin/main`, inspect `git status`, and
+create a fresh topic branch without resetting or deleting local work.
+
+## Latest remote CI versus earlier local acceptance
+
+- The last Pi local run was made on the **pre-integration** feature/fix branch and showed 13 browser/auth/Redis passes,
+  255 passed / 3 browser-default-skipped in each database suite, 46/46 student checks and 17/17 safety probes.
+- The post-integration PR #8 **remote CI** adds one browser network-failure test, making browser/auth/Redis **14 passed**.
+  All four new jobs succeed; this is not a claim that the original macOS Compose stack was revalidated at `e4dc63d`.
+- The new four-job workflow separates deterministic contract/JS checks from Chromium E2E and keeps
+  SQLite / PostgreSQL 16 plus Playwright screenshots/traces.
+- N2 integration is complete for development/CI, **not** a production launch approval.
+  Real HTTPS `Secure`/`__Host-`, proxy trust configuration, NAT-aware limiter SLO, backups/restore,
+  minor-user privacy compliance, visual review and actual teacher operating procedures remain open.
+
+## Historical local run state (Pi report, not remotely rechecked)
 
 | Field | Value |
 |---|---|
@@ -27,7 +50,7 @@
 | Native path | `PATH="$PWD/.venv/bin:$PATH" PORT=18001 ./scripts/run-local.sh` (SQLite dev fallback, no Redis → process-local limiter) |
 | Model note | The Pi registry has no `deepseek-flash`; nearest is `deepseek.v.4-b300/DeepSeek-V4-Flash` (vision). This run executed on `iagent/standard`; visual review of screenshots still needs a vision model or a human. |
 
-## Test status (final tree, evidence in `artifacts/local-validation/2026-11-18/`)
+## Historical Pi local test status (evidence in `artifacts/local-validation/2026-11-18/`)
 
 | Check | Command | Result |
 |---|---|---|
@@ -40,20 +63,15 @@
 | Functional sweep (real browser) | `/tmp/lm-student-acceptance.py http://127.0.0.1:18000` | 46/46 |
 | Security probes | `/tmp/lm-security-probe.py http://127.0.0.1:18000` | 17/17 |
 
-Blockers: **none for N2 acceptance.** Remote CI for PR #6 is green (run `44232322979`: quality/browser `13 passed`,
-sqlite `255 passed, 3 skipped`, postgres16 `255 passed, 3 skipped`). PR #5 still carries its older red run until this
-branch is folded into it.
+Historical Pi note: N2 validation was green before integration. The old PR #5/#6 status described in the original Pi report is **superseded** by the current GitHub state above.
 
 ## Next actions (ordered)
 
-1. Watch PR #5 + #6 CI; when #5 merges, retarget/merge #6 onto `main` (or cherry-pick the 6 commits).
-2. P1: split the CI quality job (contract/artifacts/JS vs Chromium E2E) so failures are attributable; keep uploading `artifacts/e2e/`.
-3. P1: calibrate the rate-limit thresholds against real school NAT/proxy traffic and run an SLO test.
-4. P1: structured CMS editor depth (batch edit, richer diff), media upload + malware scan + signed URLs, async grading queue — see `docs/13 §6`.
-5. P2 (found this run): `GET /openapi.json` is swallowed by the SPA catch-all (returns 200 HTML); serve a JSON 404 for unknown API paths.
-6. P2 (found this run): `#toast` hides with `opacity: 0` but keeps its text — stale messages can satisfy later assertions or be re-announced by screen readers.
-7. P2: add a dependency lockfile; decide whether to gate the full ruff rule set.
-8. Before any production exposure: `LEETMATH_ENV=production` + `LEETMATH_COOKIE_SECURE=1` + unique `LEETMATH_CSRF_SECRET` + shared `LEETMATH_REDIS_URL` + `FORWARDED_ALLOW_IPS` restricted; revoke legacy sessions once (`UPDATE auth_sessions SET revoked = TRUE WHERE revoked = FALSE;`).
+1. **On the local Pi machine**: run `git fetch --all --prune`, inspect `git status` and `git branch -vv`, preserve uncommitted work and Docker volumes, and start a new branch from the latest `origin/main`. The original service on port 18000 was running **at the time of the Pi report**; its current state cannot be inferred from GitHub.
+2. **N3/P0**: implement [teacher manual grading workflow #9](https://github.com/1998x-stack/LeetMath/issues/9), starting with source/schema audit and real proof/derivation teacher workflow E2E. Preserve append-only evaluation history, RBAC/IDOR, rubric totals and mathematical domain semantics.
+3. **N2.1 remaining**: dependency lockfile with reproducible install; stale `#toast` text after hiding; SPA catch-all returning 200 HTML for `/openapi.json` instead of JSON 404. All changes need focused tests and separate PRs.
+4. **N3/P1**: enrich structured CMS/batch edit, media upload with malware scan + signed URLs, asynchronous grading queue, then progress to grading 300+ human-labelled reference set.
+5. **Before any production exposure**: test real TLS and `__Host-` cookie configuration, restricted `FORWARDED_ALLOW_IPS`, shared Redis fail-closed, NAT rate-limit calibration, load/SLO tests, legacy-session revocation during an approved rollout window, backup/restore and minors/privacy review.
 
 ## Key evidence paths (local only, gitignored — not uploaded)
 
