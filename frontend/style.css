@@ -12,6 +12,10 @@ html, body { max-width: 100%; }
   max-width: 100%;
 }
 body { margin: 0; background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.6; }
+/* Editorial text (titles, display ids, slugs, external keys, pasted markup) can contain long
+   unbreakable runs. Break inside the box at the last resort instead of letting a single token
+   widen the whole page on narrow viewports (docs/15 §2.3: contain wide content locally). */
+body { overflow-wrap: anywhere; }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 :focus-visible { outline: 3px solid #93b4f5; outline-offset: 2px; border-radius: 4px; }
