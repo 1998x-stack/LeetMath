@@ -4,7 +4,9 @@
 
 // ───────────────────────── utilities ─────────────────────────
 const $app = document.getElementById("app");
-const state = { token: sessionStorage.getItem("lm_token"), user: null, attempts: {}, knowledge: null };
+// Remove credentials left by the pre-N2 SPA; the browser session now lives only in HttpOnly cookies.
+try { sessionStorage.removeItem("lm_token"); localStorage.removeItem("lm_token"); } catch {}
+const state = { csrfToken: null, csrfGeneration: 0, user: null, attempts: {}, knowledge: null };
 
 function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
@@ -26,19 +28,44 @@ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toSt
 function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
 function mount(...nodes) { $app.replaceChildren(...nodes); $app.focus({ preventScroll: true }); }
 
+async function csrfToken() {
+  if (state.csrfToken) return state.csrfToken;
+  // A bootstrap can be in flight while a logout invalidates the pair (the server reuses an
+  // existing CSRF cookie and deletes it on logout), so a token fetched before the logout
+  // response landed must not be cached: the next cookie-auth write would 403.
+  let token = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const generation = state.csrfGeneration;
+    const res = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", headers: { Accept: "application/json" } });
+    if (!res.ok) throw { status: res.status, code: "CSRF_BOOTSTRAP_FAILED", message: "无法初始化安全请求令牌" };
+    token = (await res.json()).csrf_token;
+    if (generation === state.csrfGeneration) { state.csrfToken = token; return token; }
+  }
+  return token; // invalidated while bootstrapping: usable once, never cached
+}
+
+/** Drop the cached CSRF pair and invalidate any bootstrap still in flight. */
+function invalidateCsrf() { state.csrfToken = null; state.csrfGeneration += 1; }
+
 async function api(method, path, body, extraHeaders = {}) {
   const headers = { ...extraHeaders };
+  const verb = method.toUpperCase();
   if (body !== undefined) headers["Content-Type"] = "application/json";
-  if (state.token) headers["Authorization"] = "Bearer " + state.token;
+  if (!["GET", "HEAD", "OPTIONS"].includes(verb)) headers["X-CSRF-Token"] = await csrfToken();
   let res;
-  try { res = await fetch("/api/v1" + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }); }
-  catch (e) { throw { status: 0, code: "NETWORK", message: "网络连接失败，请重试" }; }
+  try {
+    res = await fetch("/api/v1" + path, {
+      method: verb, headers, credentials: "same-origin",
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+  } catch (e) { throw { status: 0, code: "NETWORK", message: "网络连接失败，请重试" }; }
   if (res.status === 204) return null;
   const ct = res.headers.get("content-type") || "";
   const data = ct.includes("json") ? await res.json() : await res.text();
   if (!res.ok) {
     const err = (data && data.error) || { code: "HTTP_" + res.status, message: String(data) };
-    if (res.status === 401 && state.token && err.code === "AUTH_REQUIRED") { logout(true); }
+    if (err.code === "CSRF_TOKEN_INVALID" || err.code === "CSRF_TOKEN_MISSING") invalidateCsrf();
+    if (res.status === 401 && err.code === "AUTH_REQUIRED") { state.user = null; renderAccount(); }
     throw { status: res.status, ...err, etag: res.headers.get("ETag") };
   }
   if (data && typeof data === "object") Object.defineProperty(data, "_etag", { value: res.headers.get("ETag"), enumerable: false });
@@ -101,8 +128,8 @@ const STATUS_TEXT = { accepted: "✓ 正确", rejected: "✗ 不正确", partial
 
 // ───────────────────────── auth ─────────────────────────
 async function loadMe() {
-  if (!state.token) { state.user = null; return renderAccount(); }
-  try { state.user = await api("GET", "/me"); } catch { state.user = null; }
+  try { state.user = await api("GET", "/me"); }
+  catch { state.user = null; }
   renderAccount();
 }
 function isStaff() { return !!state.user && state.user.roles.some((r) => r !== "student"); }
@@ -113,9 +140,15 @@ function renderAccount() {
   if (state.user) box.replaceChildren(h("span", {}, state.user.display_name), h("span", { class: "chip" }, state.user.roles.join(" · ")), h("button", { class: "btn sm", onclick: () => logout() }, "退出"));
   else box.replaceChildren(h("a", { href: "/login", "data-link": true, class: "btn sm primary" }, "登录 / 注册"));
 }
-function logout(silent) {
-  if (state.token && !silent) api("POST", "/auth/logout").catch(() => {});
-  state.token = null; state.user = null; sessionStorage.removeItem("lm_token"); renderAccount();
+async function logout(silent) {
+  // Wait for the server to revoke the session and delete both cookies before clearing local
+  // state: otherwise a bootstrap started by this very request can re-cache a dead CSRF token
+  // and the next login is rejected with 403 CSRF_TOKEN_MISSING.
+  if (!silent) { try { await api("POST", "/auth/logout"); } catch { /* session already gone */ } }
+  state.user = null;
+  invalidateCsrf();
+  state.attempts = {};
+  renderAccount();
   if (!silent) navigate("/");
 }
 function viewLogin() {
@@ -125,7 +158,7 @@ function viewLogin() {
   async function go(kind) {
     try {
       const r = await api("POST", "/auth/" + kind, { username: u.value.trim(), password: p.value });
-      state.token = r.token; sessionStorage.setItem("lm_token", r.token); state.user = r.user; renderAccount();
+      state.user = r.user; renderAccount();
       toast("欢迎，" + r.user.display_name); navigate(new URLSearchParams(location.search).get("next") || "/");
     } catch (e) { msg.textContent = errText(e); }
   }
@@ -542,7 +575,7 @@ async function adminEdit(body, rid) {
   ta.addEventListener("input", updateDiff);
   const act = (label, fn, cls = "btn") => h("button", { class: cls, onclick: async () => {
     try { await fn(); }
-    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected" }, errText(e)),
+    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected", "data-action-error": e.code || "ERROR" }, errText(e)),
       e.details && e.details.issues ? issuesList(e.details.issues) : ""); }
   } }, label);
   const flow = (path, extra) => async () => {
@@ -554,7 +587,8 @@ async function adminEdit(body, rid) {
     const d = current();
     if (!d) return;
     const res = await api("POST", "/admin/preflight", { document: d });
-    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected") },
+    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected"),
+      "data-preflight-state": res.ok ? "ok" : "blocking" },
       res.ok ? "无阻断项" : "存在阻断项"), issuesList(res.issues));
   }));
   if (editable) {
@@ -606,7 +640,7 @@ async function adminEdit(body, rid) {
   }
   body.append(h("div", { class: "panel" },
     h("div", { class: "row spread" }, h("h2", {}, r.display_id + " · v" + r.revision_no + " · " + r.title),
-      h("span", { class: "chip" }, r.status)),
+      h("span", { class: "chip", "data-revision-status": r.status }, r.status)),
     r.review_note ? h("p", { class: "feedback partial" }, "审核意见：" + r.review_note) : null,
     !editable ? h("p", { class: "small muted" }, "当前版本只读，已发布内容不可原位修改。") : null,
     h("div", { class: "row", style: "margin:10px 0" }, actions),
@@ -658,7 +692,7 @@ async function sha256Hex(text) { const buf = await crypto.subtle.digest("SHA-256
 async function adminImports(body, bid) {
   if (bid) {
     const b = await api("GET", "/admin/imports/" + bid); const rows = await api("GET", `/admin/imports/${bid}/rows`);
-    const dl = async () => { const res = await fetch(`/api/v1/admin/imports/${bid}/rows?format=csv`, { headers: { Authorization: "Bearer " + state.token } }); const blob = await res.blob(); const a = h("a", { href: URL.createObjectURL(blob), download: `import-${bid}.csv` }); a.click(); };
+    const dl = async () => { const res = await fetch(`/api/v1/admin/imports/${bid}/rows?format=csv`, { credentials: "same-origin" }); const blob = await res.blob(); const a = h("a", { href: URL.createObjectURL(blob), download: `import-${bid}.csv` }); a.click(); };
     return body.append(h("div", { class: "panel" }, h("h2", {}, `批次 ${b.dataset}`), h("p", { class: "small" }, `${b.status} · ${b.dry_run ? "预检（不落库）" : "正式导入"} · adapter ${b.adapter_version}`), h("pre", { class: "code" }, JSON.stringify(b.counts, null, 2)),
       h("div", { class: "row" }, h("button", { class: "btn", onclick: dl }, "导出逐行报告 CSV"), h("button", { class: "btn", onclick: async () => { await api("POST", `/admin/imports/${bid}/retry-failed`); route(); } }, "重试失败行"))),
       h("table", { class: "list" }, h("thead", {}, h("tr", {}, ["行", "外部键", "状态", "阶段", "错误", "详情"].map((x) => h("th", {}, x)))), h("tbody", {}, rows.items.map((r) => h("tr", {}, h("td", {}, r.row_no), h("td", { class: "small" }, r.source_record_key || ""), h("td", {}, h("span", { class: "chip " + ({ new_record: "green", retained: "", duplicate_candidate: "amber", rejected: "red", failed: "red", quarantined: "red" }[r.state] || "") }, r.state)), h("td", {}, r.stage), h("td", { class: "small" }, r.error_code || ""), h("td", { class: "small" }, h("code", {}, JSON.stringify(r.error_detail || {}).slice(0, 160))))))));

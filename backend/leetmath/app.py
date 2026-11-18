@@ -10,10 +10,12 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .config import ROOT
+from .config import ROOT, settings
 from .db import create_all, new_session
 from .services.audit import request_id_var
 from .services.errors import ApiError
+from .services.rate_limit import rate_limit
+from .services.security import csrf_error
 
 log = logging.getLogger("leetmath")
 FRONTEND = ROOT / "frontend"
@@ -33,6 +35,14 @@ def _err(status: int, code: str, message: str, details: dict | None = None) -> J
 def create_app(init_db: bool | None = None) -> FastAPI:
     import os
 
+    if settings.environment == "production":
+        if not settings.cookie_secure:
+            raise RuntimeError("LEETMATH_COOKIE_SECURE=1 is required in production")
+        if not settings.redis_url:
+            raise RuntimeError("LEETMATH_REDIS_URL is required in production")
+        if settings.csrf_secret == "leetmath-dev-only-change-this-secret" or len(settings.csrf_secret) < 32:
+            raise RuntimeError("a unique LEETMATH_CSRF_SECRET (at least 32 characters) is required in production")
+
     if init_db is None:  # production runs `leetmath.cli migrate` and sets LEETMATH_AUTO_CREATE=0
         init_db = os.environ.get("LEETMATH_AUTO_CREATE", "1") == "1"
     if init_db:
@@ -46,11 +56,42 @@ def create_app(init_db: bool | None = None) -> FastAPI:
         s = new_session()
         request.state.db = s
         try:
+            if request.url.path.startswith("/api/v1/"):
+                client_ip = request.client.host if request.client else "unknown"
+                path = request.url.path
+                if path.endswith("/auth/login") or path.endswith("/auth/token"):
+                    operation, limit = "auth-login", 60
+                elif path.endswith("/auth/register"):
+                    operation, limit = "auth-register", 10
+                elif path.endswith("/submissions"):
+                    operation, limit = "submission", 240
+                elif path.endswith("/content-reports"):
+                    operation, limit = "content-report", 30
+                elif "/admin/" in path:
+                    operation, limit = "cms-write" if request.method not in {"GET", "HEAD"} else "cms-read", 180
+                elif request.method in {"GET", "HEAD", "OPTIONS"}:
+                    operation, limit = "read", 600
+                else:
+                    operation, limit = "write", 180
+                # Keep the test suite deterministic while retaining explicit auth-register limits
+                # for the two-process Redis integration test.
+                if settings.environment == "test" and operation not in {"auth-login", "auth-register"}:
+                    limit = max(limit, settings.rate_limit_per_minute)
+                # Count rejected CSRF requests too; otherwise an attacker could bypass IP throttles.
+                rate_limit(f"ip:{client_ip}:{operation}", limit)
+                csrf_code = csrf_error(request)
+                if csrf_code:
+                    raise ApiError(csrf_code, "request origin or CSRF token is invalid")
             response = await call_next(request)
             if response.status_code < 400:
                 s.commit()
             else:
                 s.rollback()
+        except ApiError as exc:
+            s.rollback()
+            response = _err(exc.status, exc.code, exc.message, exc.details)
+            if exc.status == 429:
+                response.headers["Retry-After"] = str(max(1, int(exc.details.get("retry_after_s", 1))))
         except Exception:
             s.rollback()
             log.exception("unhandled error rid=%s", rid)

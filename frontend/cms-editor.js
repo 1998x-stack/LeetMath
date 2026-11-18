@@ -6,6 +6,11 @@
 
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
 
+  // Row identity and workflow state are per-revision storage details, not editorial content:
+  // a freshly created revision always differs from its parent in these fields, so counting
+  // them would report "4 处" before the author changed anything and drown the real diff.
+  const IGNORED_DIFF_PATHS = /^\$\.revision\.(id|revision_no|status)$|^\$\.revision\.parts\[\d+\]\.id$/;
+
   function changes(before, after, path, out) {
     path = path || "$";
     out = out || [];
@@ -19,7 +24,7 @@
         const suffix = Array.isArray(before) ? "[" + key + "]" : "." + key;
         changes(before[key], after[key], path + suffix, out);
       }
-    } else {
+    } else if (!IGNORED_DIFF_PATHS.test(path)) {
       out.push({ path: path, before: before, after: after });
     }
     return out;
@@ -83,8 +88,12 @@
       return h("button", { type: "button", class: "btn sm " + (cls || ""), disabled: !editable, onclick: cb }, label);
     }
 
-    function richEditor(label, rt) {
-      const container = h("section", { class: "cms-rich" }, h("h3", {}, label));
+    // `scope` is a stable machine name for the edited region (data-cms-scope) so field
+    // names that repeat across regions (~"行内公式 LaTeX #2" in every RichText block)
+    // stay unambiguous for tests and assistive technology.
+    function richEditor(label, rt, scope) {
+      const container = h("section", { class: "cms-rich", "data-cms-scope": scope, "aria-label": label + " 编辑区" },
+        h("h3", {}, label));
       if (!rt || !Array.isArray(rt.blocks)) return container;
       const preview = h("div", { class: "cms-preview statement", "aria-label": label + " 预览" }, opts.rich(rt));
       const changed = () => { preview.replaceChildren(opts.rich(rt)); signal(); };
@@ -132,11 +141,12 @@
       level.addEventListener("input", () => { difficulty.value = Number(level.value); signal(); });
       rootNode.append(h("label", { class: "cms-field" }, h("span", {}, "难度 (1–10)"), level));
     }
-    rootNode.append(richEditor("公共题干", doc.revision.shared_statement));
+    rootNode.append(richEditor("公共题干", doc.revision.shared_statement, "revision.shared_statement"));
 
     const parts = doc.revision.parts || [];
     parts.forEach((part, index) => {
-      const section = h("section", { class: "cms-part" },
+      const section = h("section", { class: "cms-part", "data-cms-part-key": part.part_key,
+          "aria-label": "小问 " + (index + 1) + " · part_key=" + part.part_key },
         h("div", { class: "row spread" }, h("h3", {}, "小问 " + (index + 1) + " · part_key=" + part.part_key),
           h("div", { class: "row" },
             button("上移", () => { movePart(doc, index, -1); opts.refresh(); }),
@@ -153,7 +163,7 @@
           "（变更题型/判题模式、rubric、推理卡请使用 JSON 模式）"),
         textField("分值", part.max_score, (v) => { part.max_score = v; }, false,
           part.rubric || part.reasoning_steps ? "注意：本问包含评分细则/推理卡，分值修改可能需要同时调整权重。" : ""),
-        richEditor("小问题干", part.prompt));
+        richEditor("小问题干 · 小问 " + (index + 1), part.prompt, "revision.parts." + part.part_key + ".prompt"));
       const spec = part.answer_spec || {};
       const keys = ["expected", "canonical_expr", "expected_latex"];
       for (const key of keys) {

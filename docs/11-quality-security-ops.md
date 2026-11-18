@@ -14,6 +14,8 @@ dev/staging/production 分离；staging 使用合成数据或经授权脱敏素�
 - E2E：教师录入→双审核→发布→学生检索→逐问提交→复核/撤稿；跨设备响应。
 - 灾备：备份恢复、删错草稿恢复、权利到期后权限变更、失败批次重试。
 - 安全：越权 IDOR、XSS（Markdown/LaTeX/SVG）、上传恶意文件、SSRF（远程媒体导入）、重放、CSRF、CAS 资源耗尽。
+- 浏览器 E2E：Playwright Chromium 覆盖桌面与 375px；教师编审闭环、KaTeX、Cookie、CSRF、XSS、If-Match 冲突和 trace artifact。
+- 分布式限流：Redis Lua 原子窗口；至少两个独立 API 进程共享同一限流桶；Redis 故障时生产 fail closed。
 
 ## 3. 安全边界与学生隐私
 
@@ -25,6 +27,12 @@ dev/staging/production 分离；staging 使用合成数据或经授权脱敏素�
 - 富文本强制净化、CSP、SVG 安全策略；展示公式不得执行 HTML/JS。
 - CAS/用户表达式处理独立容器/进程，限制时间内存/CPU/对象数；拒绝直接 eval。
 - 令牌/数据库凭据使用 secrets management，不纳入 Git；限制管理员访问审计日志。
+
+### 3.1 Cookie 会话与共享限流
+
+浏览器身份凭证只通过 HttpOnly Cookie 传递；CSRF token 通过签名 double-submit cookie/header 验证。SPA 不得把 session token 写入 sessionStorage/localStorage。显式 Bearer token 只作为非浏览器集成兼容入口。
+
+所有生产 API 实例必须连接同一 Redis 限流后端。Redis 未配置或不可用时返回 503，不得降级到每进程内存桶。开发环境的本地 fallback 仅供单进程调试，不具备多实例一致性。反向代理部署必须通过 FORWARDED_ALLOW_IPS 限定可信代理地址，避免 IP 限流把所有访问者聚合成代理地址。
 
 ## 4. 版权与来源风控
 

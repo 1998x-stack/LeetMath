@@ -58,10 +58,9 @@ def issue_token(s: Session, user: User) -> str:
     return token
 
 
-def _user_from_token(s: Session, authorization: str | None) -> User | None:
-    if not authorization or not authorization.lower().startswith("bearer "):
+def _user_from_token(s: Session, token: str | None) -> User | None:
+    if not token:
         return None
-    token = authorization.split(" ", 1)[1].strip()
     sess = s.get(AuthSession, hashlib.sha256(token.encode()).hexdigest())
     if sess is None or sess.revoked:
         return None
@@ -71,12 +70,23 @@ def _user_from_token(s: Session, authorization: str | None) -> User | None:
     return s.get(User, sess.user_id)
 
 
+def _request_token(request: Request, authorization: str | None) -> tuple[str | None, str]:
+    if authorization and authorization.lower().startswith("bearer "):
+        return authorization.split(" ", 1)[1].strip(), "bearer"
+    from ..services.security import session_cookie_name
+    return request.cookies.get(session_cookie_name()), "cookie"
+
+
 def optional_user(request: Request, authorization: str | None = Header(default=None)) -> User | None:
-    return _user_from_token(request.state.db, authorization)
+    token, mode = _request_token(request, authorization)
+    request.state.auth_mode = mode if token else "anonymous"
+    return _user_from_token(request.state.db, token)
 
 
 def current_user(request: Request, authorization: str | None = Header(default=None)) -> User:
-    u = _user_from_token(request.state.db, authorization)
+    token, mode = _request_token(request, authorization)
+    request.state.auth_mode = mode if token else "anonymous"
+    u = _user_from_token(request.state.db, token)
     if u is None:
         raise ApiError("AUTH_REQUIRED", "login required")
     return u

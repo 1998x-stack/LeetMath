@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 from typing import Any
+import hashlib
 
-from fastapi import APIRouter, Depends, Header, Query, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..config import settings
 from ..models import (
     Attempt,
+    AuthSession,
     Bookmark,
     Collection,
     CollectionItem,
@@ -27,6 +30,7 @@ from ..models import (
 )
 from ..services import catalog, learning
 from ..services.errors import ApiError
+from ..services.security import create_csrf_token, csrf_cookie_name, session_cookie_name, valid_csrf_token
 from ..services.search import search
 from .common import (
     current_user,
@@ -51,38 +55,84 @@ class Credentials(BaseModel):
     display_name: str | None = Field(default=None, max_length=128)
 
 
+def _authenticate(s: Session, body: Credentials, action: str) -> User:
+    learning.rate_limit(f"auth-user:{action}:{body.username.lower()}", 20)
+    user = s.scalar(select(User).where(User.username == body.username))
+    if user is None or not verify_password(body.password, user.password_hash):
+        raise ApiError("AUTH_REQUIRED", "invalid username or password")
+    return user
+
+
+def _revoke_token(s: Session, token: str | None) -> None:
+    if not token:
+        return
+    session = s.get(AuthSession, hashlib.sha256(token.encode()).hexdigest())
+    if session:
+        session.revoked = True
+
+
+def _set_session_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=session_cookie_name(), value=token, max_age=settings.session_ttl_hours * 3600,
+        httponly=True, secure=settings.cookie_secure, samesite="lax", path="/",
+    )
+
+
+@router.get("/auth/csrf")
+def csrf_bootstrap(request: Request, response: Response):
+    """Issue/reuse a signed, JS-readable CSRF token; it is not an authentication credential."""
+    existing = request.cookies.get(csrf_cookie_name())
+    token = existing if valid_csrf_token(existing) else create_csrf_token()
+    response.set_cookie(
+        key=csrf_cookie_name(), value=token, max_age=settings.session_ttl_hours * 3600,
+        httponly=False, secure=settings.cookie_secure, samesite="strict", path="/",
+    )
+    return {"csrf_token": token}
+
+
 @router.post("/auth/register", status_code=201)
-def register(body: Credentials, s: Session = Depends(db)):
+def register(body: Credentials, request: Request, response: Response, s: Session = Depends(db)):
     if s.scalar(select(User).where(User.username == body.username)):
         raise ApiError("CONFLICT", "username taken")
-    learning.rate_limit("register", 30)
-    u = User(username=body.username, display_name=body.display_name or body.username, roles=",student,",
-             password_hash=hash_password(body.password))
-    s.add(u)
+    learning.rate_limit(f"register-user:{body.username.lower()}", 10)
+    user = User(username=body.username, display_name=body.display_name or body.username, roles=",student,",
+                password_hash=hash_password(body.password))
+    s.add(user)
     s.flush()
-    return {"token": issue_token(s, u), "user": user_out(u)}
+    old_token = request.cookies.get(session_cookie_name())
+    _revoke_token(s, old_token)
+    _set_session_cookie(response, issue_token(s, user))
+    return {"user": user_out(user)}
 
 
 @router.post("/auth/login")
-def login(body: Credentials, s: Session = Depends(db)):
-    learning.rate_limit(f"login:{body.username}", 20)
-    u = s.scalar(select(User).where(User.username == body.username))
-    if u is None or not verify_password(body.password, u.password_hash):
-        raise ApiError("AUTH_REQUIRED", "invalid username or password")
-    return {"token": issue_token(s, u), "user": user_out(u)}
+def login(body: Credentials, request: Request, response: Response, s: Session = Depends(db)):
+    user = _authenticate(s, body, "login")
+    # Rotate an existing browser session on re-authentication.
+    _revoke_token(s, request.cookies.get(session_cookie_name()))
+    _set_session_cookie(response, issue_token(s, user))
+    return {"user": user_out(user)}
+
+
+@router.post("/auth/token")
+def issue_api_token(body: Credentials, s: Session = Depends(db)):
+    """Explicit non-browser compatibility endpoint. Never use from the SPA."""
+    user = _authenticate(s, body, "login")
+    return {"token": issue_token(s, user), "user": user_out(user)}
 
 
 @router.post("/auth/logout", status_code=204)
-def logout(authorization: str | None = Header(default=None), s: Session = Depends(db)):
-    import hashlib
-
-    from ..models import AuthSession
-
+def logout(request: Request, response: Response, authorization: str | None = Header(default=None),
+           s: Session = Depends(db)):
     if authorization and authorization.lower().startswith("bearer "):
-        sess = s.get(AuthSession, hashlib.sha256(authorization.split(" ", 1)[1].strip().encode()).hexdigest())
-        if sess:
-            sess.revoked = True
-    return Response(status_code=204)
+        _revoke_token(s, authorization.split(" ", 1)[1].strip())
+    _revoke_token(s, request.cookies.get(session_cookie_name()))
+    response.delete_cookie(key=session_cookie_name(), path="/", secure=settings.cookie_secure,
+                           httponly=True, samesite="lax")
+    response.delete_cookie(key=csrf_cookie_name(), path="/", secure=settings.cookie_secure,
+                           httponly=False, samesite="strict")
+    response.status_code = 204
+    return response
 
 
 @router.get("/me")

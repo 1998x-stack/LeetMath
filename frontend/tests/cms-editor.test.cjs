@@ -86,3 +86,40 @@ test("nested changes preserve reference values and distinguish deleted fields", 
   assert.equal(diff[0].after, undefined);
   assert.equal(diff[0].before.criteria[0].id, "c1");
 });
+
+test("new-revision row identity and workflow state are not reported as content changes", () => {
+  const published = fixture();
+  published.revision.id = "row-v1";
+  published.revision.revision_no = 1;
+  published.revision.status = "published";
+  published.revision.parts[0].id = "part-row-v1";
+  published.revision.parts[1].id = "part-row-v1b";
+
+  // What the server returns for a revision created from the published one: identical
+  // editorial content, fresh row ids, new revision number, draft state.
+  const draft = CMS.copy(published);
+  draft.revision.id = "row-v2";
+  draft.revision.revision_no = 2;
+  draft.revision.status = "draft";
+  draft.revision.parts[0].id = "part-row-v2";
+  draft.revision.parts[1].id = "part-row-v2b";
+
+  assert.deepEqual(CMS.changes(published, draft), []);
+});
+
+test("one editorial edit on a new revision is reported exactly once", () => {
+  const published = fixture();
+  published.revision.id = "row-v1";
+  published.revision.revision_no = 1;
+  published.revision.status = "published";
+  const draft = CMS.copy(published);
+  draft.revision.id = "row-v2";
+  draft.revision.revision_no = 2;
+  draft.revision.status = "draft";
+  draft.revision.title = "修订后的标题";
+  const diff = CMS.changes(published, draft);
+  assert.equal(diff.length, 1);
+  assert.equal(diff[0].path, "$.revision.title");
+  assert.equal(diff[0].before, "题目");
+  assert.equal(diff[0].after, "修订后的标题");
+});

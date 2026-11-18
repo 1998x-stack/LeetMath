@@ -51,3 +51,6 @@ pgdata/
 # Applied patch artifacts
 *.patch
 *.diff
+
+# Local validation evidence (screenshots, Playwright traces, raw test logs)
+artifacts/

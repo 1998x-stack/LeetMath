@@ -4,7 +4,7 @@ Base path：/api/v1。统一 JSON，UTF-8。草案需以 OpenAPI 3.1 文件和�
 
 ## 1. 通用约定
 
-- Auth：Bearer token / 会话 cookie，依据部署的认证方案；所有写入必须授权，CSRF 在 cookie 模式必须防护。
+- Auth：浏览器使用 HttpOnly session cookie；非浏览器集成可使用显式 Bearer token。Cookie 写请求必须通过 CSRF 与 Origin 校验。
 - IDs：内部使用 UUID；display_id 仅用于用户界面；路径使用 slug 可变，返回 canonical URL。
 - Pagination：cursor + limit（1..100），分页响应含 next_cursor/has_more；排序追加稳定 ID。
 - Time：UTC RFC3339；locale BCP47；金额/小数精度用字符串以避免浮点歧义。
@@ -12,6 +12,21 @@ Base path：/api/v1。统一 JSON，UTF-8。草案需以 OpenAPI 3.1 文件和�
 - Idempotency-Key：POST submissions/imports/publish/jobs 必须支持；同 key 不同请求体返回 409 IDEMPOTENCY_CONFLICT。
 - ETag / If-Match：用于草稿编辑乐观锁；409 或 412 返回当前版本/冲突字段。
 - 公开 API 严格过滤许可和可见性；管理员只读私有内容也必须按角色与 scope 授权。
+
+
+## 1.1 认证与 CSRF
+
+~~~text
+GET  /auth/csrf       # 建立 HMAC 签名的 CSRF cookie，返回 csrf_token
+POST /auth/register   # 创建账号并设置 HttpOnly session cookie，响应只返回 user
+POST /auth/login      # 登录并轮换旧 session cookie，响应只返回 user
+POST /auth/logout     # 撤销当前 session，删除 session 与 CSRF cookie
+POST /auth/token      # 非浏览器 API 兼容入口，显式返回 Bearer token
+~~~
+
+浏览器 SPA 使用 fetch credentials=same-origin，并在所有 cookie-auth unsafe methods 携带 X-CSRF-Token。POST /auth/token 是显式凭据换取 Bearer token 的非浏览器兼容入口，不使用 ambient cookie，因此不要求 CSRF header；若请求带 Origin，仍必须同源。Session Cookie：HttpOnly、SameSite=Lax、Path=/；生产 Secure，启用 Secure 时使用 __Host- 前缀且不设置 Domain。CSRF Cookie：JS 可读、SameSite=Strict、Path=/；生产 Secure。服务端比较 CSRF cookie/header、验证 HMAC，并在 Origin 存在时要求与请求源一致。显式 Authorization: Bearer 请求保留兼容性，SPA 不保存或发送 Bearer token。
+
+生产必须设置 LEETMATH_ENV=production、LEETMATH_COOKIE_SECURE=1、共享 LEETMATH_REDIS_URL，以及唯一且至少 32 字符的 LEETMATH_CSRF_SECRET。
 
 ## 2. 公开题库与筛选
 

@@ -3,8 +3,29 @@ import uuid
 from datetime import timedelta
 from decimal import Decimal
 
+from fastapi.testclient import TestClient
+
 from leetmath.db import session_scope
 from leetmath.models import Evaluation, StepReviewState, User
+
+
+def _register_bearer(app, prefix):
+    username = prefix + uuid.uuid4().hex[:6]
+    password = "longenough1"
+    with TestClient(app) as browser:
+        csrf = browser.get("/api/v1/auth/csrf").json()["csrf_token"]
+        registered = browser.post(
+            "/api/v1/auth/register",
+            json={"username": username, "password": password},
+            headers={"X-CSRF-Token": csrf},
+        )
+        assert registered.status_code == 201, registered.text
+        token_response = browser.post(
+            "/api/v1/auth/token",
+            json={"username": username, "password": password},
+        )
+        assert token_response.status_code == 200, token_response.text
+        return username, token_response.json()["token"]
 
 
 def _start(client, H, user="student", slug="function-x-log-x-minus-a-x"):
@@ -31,9 +52,9 @@ def test_score_conservation_and_hidden_references(client, H):
     assert v["score_label"].startswith("主观自评")
 
 
-def test_full_session_scoring_xp_schedule_and_profile(client, H):
-    reg = client.post("/api/v1/auth/register", json={"username": "rp" + uuid.uuid4().hex[:6], "password": "longenough1"}).json()
-    hdr = {"Authorization": f"Bearer {reg['token']}"}
+def test_full_session_scoring_xp_schedule_and_profile(app, client):
+    username, token = _register_bearer(app, "rp")
+    hdr = {"Authorization": f"Bearer {token}"}
     rid = client.get("/api/v1/problems/function-x-log-x-minus-a-x").json()["current_revision"]["id"]
     v = client.post("/api/v1/learning/attempts", json={"problem_revision_id": rid}, headers=hdr).json()
     ratings = ["know", "fuzzy", "unsure", "know", "know", "fuzzy", "know", "unsure"]
@@ -59,7 +80,7 @@ def test_full_session_scoring_xp_schedule_and_profile(client, H):
     assert prof["weak_key_steps"]  # the fuzzy/unsure key steps show up
     # self-ratings never become official evaluations
     with session_scope() as s:
-        uid = s.query(User).filter_by(username=reg["user"]["username"]).one().id
+        uid = s.query(User).filter_by(username=username).one().id
         from leetmath.models import Submission
         assert s.query(Submission).filter_by(user_id=uid).count() == 0
         assert s.query(Evaluation).join(Submission, Evaluation.submission_id == Submission.id).filter(Submission.user_id == uid).count() == 0
@@ -96,9 +117,9 @@ def test_invalid_rating_and_ownership(client, H):
     assert client.get(f"/api/v1/learning/attempts/{v['attempt_id']}", headers=H("student2")).status_code == 404
 
 
-def test_due_queue_with_sibling_burial(client, H):
-    reg = client.post("/api/v1/auth/register", json={"username": "due" + uuid.uuid4().hex[:6], "password": "longenough1"}).json()
-    hdr = {"Authorization": f"Bearer {reg['token']}"}
+def test_due_queue_with_sibling_burial(app, client):
+    username, token = _register_bearer(app, "due")
+    hdr = {"Authorization": f"Bearer {token}"}
     rid = client.get("/api/v1/problems/ellipse-focal-chord-area").json()["current_revision"]["id"]
     v = client.post("/api/v1/learning/attempts", json={"problem_revision_id": rid}, headers=hdr).json()
     for c in v["cards"]:
@@ -106,7 +127,7 @@ def test_due_queue_with_sibling_burial(client, H):
                     json={"event_id": uuid.uuid4().hex, "step_id": c["step_id"], "rating": "unsure"}, headers=hdr)
     assert client.post("/api/v1/learning/attempts", json={"mode": "due"}, headers=hdr).status_code == 404  # due tomorrow
     with session_scope() as s:  # time-travel: make everything due
-        uid = s.query(User).filter_by(username=reg["user"]["username"]).one().id
+        uid = s.query(User).filter_by(username=username).one().id
         for st in s.query(StepReviewState).filter_by(user_id=uid):
             st.due_at = st.due_at - timedelta(days=2)
     due = client.post("/api/v1/learning/attempts", json={"mode": "due"}, headers=hdr).json()

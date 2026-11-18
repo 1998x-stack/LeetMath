@@ -1,6 +1,8 @@
 # 14｜Phase 1 下一阶段实施计划：CI 质量门禁与结构化 CMS
 
 > 2026-11-17 · 迭代 N1 候选交付 · **不是生产上线；CI 与浏览器验收以真实执行为准**。
+>
+> N1 已通过 PR #2 合并。N2 Issues #3/#4 的源码调用链、实现和验收边界见 [docs/15](15-n2-source-flow-security-and-browser-e2e.md)；N2 代码是否完成以该分支 CI 和浏览器 artifact 为准。
 
 ## 一、基线、证据和优先级
 

@@ -1,14 +1,11 @@
 """Attempts, submissions, evaluations, bookmarks, mistakes, progress, reports (docs/06, docs/09)."""
 from __future__ import annotations
 
-import time
-from collections import defaultdict, deque
 from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import settings
 from ..content.contract import canonical_json, sha256_text
 from ..grading.engine import grade
 from ..models import (
@@ -30,23 +27,11 @@ from ..models import (
 from .audit import audit
 from .catalog import public_revision, require_roles
 from .errors import ApiError
+from .rate_limit import rate_limit
 
 MATH_VERDICTS = {"accepted", "rejected", "partial"}
 
-# ─────────────────────────── rate limiting (per user, in-process) ───────────────────────────
-_buckets: dict[str, deque] = defaultdict(deque)
-
-
-def rate_limit(key: str, per_minute: int | None = None) -> None:
-    per_minute = per_minute or settings.rate_limit_per_minute
-    now = time.monotonic()
-    q = _buckets[key]
-    while q and now - q[0] > 60:
-        q.popleft()
-    if len(q) >= per_minute:
-        raise ApiError("RATE_LIMITED", "too many requests, slow down", {"retry_after_s": int(60 - (now - q[0])) + 1})
-    q.append(now)
-
+# Shared Redis-backed rate limiter; dev-only local fallback is isolated in services/rate_limit.py.
 
 # ─────────────────────────── attempts & submissions ───────────────────────────
 def _assert_revision_playable(s: Session, rev: ProblemRevision) -> None:
@@ -100,7 +85,7 @@ def submit(s: Session, user: User, attempt_id: str, revision_part_id: str, respo
         raise ApiError("VALIDATION_FAILED", "response.input must be a string")
     rev = s.get(ProblemRevision, att.problem_revision_id)
     _assert_revision_playable(s, rev)
-    rate_limit(f"submit:{user.id}")
+    rate_limit(f"submit:user:{user.id}")
     spec: AnswerSpec = part.answer_specs[-1]
     sub = Submission(attempt_id=att.id, user_id=user.id, revision_part_id=part.id, answer_spec_id=spec.id,
                      response={"type": response.get("type", part.response_type), "input": response["input"][:2000]},

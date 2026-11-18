@@ -6,7 +6,16 @@
   font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 * { box-sizing: border-box; }
+html, body { max-width: 100%; }
+#app, main, .topbar, .panel, .grid2 > *, .layout-detail > *, .cms-form, .cms-part, .cms-rich {
+  min-width: 0;
+  max-width: 100%;
+}
 body { margin: 0; background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.6; }
+/* Editorial text (titles, display ids, slugs, external keys, pasted markup) can contain long
+   unbreakable runs. Break inside the box at the last resort instead of letting a single token
+   widen the whole page on narrow viewports (docs/15 §2.3: contain wide content locally). */
+body { overflow-wrap: anywhere; }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 :focus-visible { outline: 3px solid #93b4f5; outline-offset: 2px; border-radius: 4px; }
@@ -17,7 +26,7 @@ button, input, select, textarea { font: inherit; }
 .mainnav { display: flex; gap: 18px; flex: 1; }
 .mainnav a { color: var(--muted); font-weight: 500; white-space: nowrap; }
 .mainnav a.active { color: var(--ink); }
-.account { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.account { display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; min-width: 0; font-size: 14px; }
 main:focus { outline: none; }
 main { max-width: 1180px; margin: 0 auto; padding: 24px; min-height: 70vh; }
 .foot { text-align: center; color: var(--muted); font-size: 13px; padding: 24px; }
@@ -48,13 +57,14 @@ textarea { width: 100%; font-family: var(--mono); font-size: 13px; }
 .chip.green { background: var(--ok-bg); color: var(--ok); }
 .chip.red { background: var(--bad-bg); color: var(--bad); }
 .chip.amber { background: var(--warn-bg); color: var(--warn); }
-table.list { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+table.list { display: block; width: 100%; max-width: 100%; overflow-x: auto; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
 table.list th, table.list td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
 table.list th { background: #fafafa; color: var(--muted); font-weight: 600; font-size: 13px; }
 table.list tr:last-child td { border-bottom: none; }
 .diff { font-variant-numeric: tabular-nums; font-weight: 600; }
 .diff.e { color: var(--ok); } .diff.m { color: var(--warn); } .diff.h { color: var(--bad); }
-.statement { font-size: 18px; line-height: 1.9; }
+.statement { min-width: 0; max-width: 100%; overflow-wrap: anywhere; font-size: 18px; line-height: 1.9; }
+.inline-math { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
 .statement .katex { font-size: 1.05em; }
 .display-math { overflow-x: auto; padding: 6px 0; text-align: center; }
 .partnav { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
@@ -78,7 +88,7 @@ table.list tr:last-child td { border-bottom: none; }
 .side .panel { position: sticky; top: 76px; }
 .kv { display: grid; grid-template-columns: 90px 1fr; gap: 4px 10px; font-size: 14px; }
 .kv dt { color: var(--muted); }
-.kv dd { margin: 0; }
+.kv dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 14px; flex-wrap: wrap; }
 .tabs a { padding: 8px 14px; color: var(--muted); border-bottom: 2px solid transparent; }
 .tabs a.cur { color: var(--ink); border-color: var(--ink); font-weight: 600; }
@@ -106,7 +116,7 @@ pre.code { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8p
   .layout-detail, .rp-grid, .grid2 { grid-template-columns: 1fr; }
   .side .panel { position: static; }
   .topbar { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
-  .mainnav { order: 3; flex: 1 0 100%; overflow-x: auto; }
+  .mainnav { order: 3; flex: 1 0 100%; min-width: 0; overflow-x: auto; }
   .brand { flex: 1; }
   main { padding: 14px; }
   .statement { font-size: 17px; }
