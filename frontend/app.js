@@ -562,7 +562,7 @@ async function adminEdit(body, rid) {
   ta.addEventListener("input", updateDiff);
   const act = (label, fn, cls = "btn") => h("button", { class: cls, onclick: async () => {
     try { await fn(); }
-    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected" }, errText(e)),
+    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected", "data-action-error": e.code || "ERROR" }, errText(e)),
       e.details && e.details.issues ? issuesList(e.details.issues) : ""); }
   } }, label);
   const flow = (path, extra) => async () => {
@@ -574,7 +574,8 @@ async function adminEdit(body, rid) {
     const d = current();
     if (!d) return;
     const res = await api("POST", "/admin/preflight", { document: d });
-    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected") },
+    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected"),
+      "data-preflight-state": res.ok ? "ok" : "blocking" },
       res.ok ? "无阻断项" : "存在阻断项"), issuesList(res.issues));
   }));
   if (editable) {
@@ -626,7 +627,7 @@ async function adminEdit(body, rid) {
   }
   body.append(h("div", { class: "panel" },
     h("div", { class: "row spread" }, h("h2", {}, r.display_id + " · v" + r.revision_no + " · " + r.title),
-      h("span", { class: "chip" }, r.status)),
+      h("span", { class: "chip", "data-revision-status": r.status }, r.status)),
     r.review_note ? h("p", { class: "feedback partial" }, "审核意见：" + r.review_note) : null,
     !editable ? h("p", { class: "small muted" }, "当前版本只读，已发布内容不可原位修改。") : null,
     h("div", { class: "row", style: "margin:10px 0" }, actions),
