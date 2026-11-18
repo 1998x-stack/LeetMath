@@ -367,3 +367,45 @@ def test_two_editors_receive_precondition_failure_without_losing_input(live_serv
         second_context.close()
         browser.close()
         playwright.stop()
+
+def test_logout_network_failure_preserves_session_until_revocation_confirmed(live_server):
+    """A failed logout fetch must not make a still-authenticated session look logged out."""
+    playwright, browser = _browser()
+    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    page = context.new_page()
+    try:
+        _login(page, live_server, "editor", "editor-pass-123")
+        page.route("**/api/v1/auth/logout", lambda route: route.abort("failed"))
+        page.get_by_role("button", name="退出").click()
+        page.get_by_text("无法确认退出登录", exact=False).wait_for(state="visible", timeout=15000)
+
+        # The request never reached the server, so the HttpOnly session remains valid.
+        # The interface must preserve the account and let the user retry.
+        assert page.get_by_role("button", name="退出").is_visible()
+        assert page.get_by_role("link", name="登录 / 注册").count() == 0
+        assert page.evaluate(
+            """async () => (await fetch('/api/v1/me', {credentials: 'same-origin'})).status"""
+        ) == 200
+
+        page.unroute("**/api/v1/auth/logout")
+        with page.expect_response(lambda r: r.url.endswith("/api/v1/auth/logout")) as response:
+            page.get_by_role("button", name="退出").click()
+        assert response.value.status == 204
+        page.get_by_role("link", name="登录 / 注册").wait_for(state="visible", timeout=15000)
+        assert page.evaluate(
+            """async () => (await fetch('/api/v1/me', {credentials: 'same-origin'})).status"""
+        ) == 401
+
+        # Retrying after an uncertain logout must not poison the next CSRF bootstrap.
+        page.get_by_role("link", name="登录 / 注册").click()
+        page.locator('input[autocomplete="username"]').fill("editor")
+        page.locator('input[autocomplete="current-password"]').fill("editor-pass-123")
+        page.locator('button[type="submit"]').click()
+        page.get_by_role("link", name="后台").wait_for(state="visible", timeout=15000)
+    except Exception:
+        _save_failure(page, "logout-network-failure")
+        raise
+    finally:
+        context.close()
+        browser.close()
+        playwright.stop()

@@ -141,10 +141,22 @@ function renderAccount() {
   else box.replaceChildren(h("a", { href: "/login", "data-link": true, class: "btn sm primary" }, "登录 / 注册"));
 }
 async function logout(silent) {
-  // Wait for the server to revoke the session and delete both cookies before clearing local
-  // state: otherwise a bootstrap started by this very request can re-cache a dead CSRF token
-  // and the next login is rejected with 403 CSRF_TOKEN_MISSING.
-  if (!silent) { try { await api("POST", "/auth/logout"); } catch { /* session already gone */ } }
+  // Clear the UI only when server revocation is confirmed (204) or the session was
+  // already invalid (401). A network failure or 5xx is ambiguous: the cookie may
+  // still be valid, so treating it as a completed logout would mislead the user.
+  if (!silent) {
+    try {
+      await api("POST", "/auth/logout");
+    } catch (e) {
+      if (e.status !== 401) {
+        // Always bootstrap a fresh pair on retry: a lost response could have deleted
+        // the old CSRF cookie after the request reached the server.
+        invalidateCsrf();
+        toast("无法确认退出登录，请检查网络后重试");
+        return;
+      }
+    }
+  }
   state.user = null;
   invalidateCsrf();
   state.attempts = {};
