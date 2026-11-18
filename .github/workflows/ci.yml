@@ -16,17 +16,7 @@ jobs:
   quality:
     name: Contract, generated artifacts, JS and lint
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 12
     env:
-      LEETMATH_REDIS_URL: redis://127.0.0.1:6379/0
       LEETMATH_COOKIE_SECURE: "0"
       LEETMATH_CSRF_SECRET: leetmath-ci-csrf-secret-at-least-32-chars
     steps:
@@ -72,17 +62,44 @@ jobs:
               raise AssertionError("OpenAPI drift: update docs/generated/openapi.json")
           print(f"OpenAPI matches: {len(actual['paths'])} paths")
           PY
-      - name: Install Chromium for Playwright
-        run: python -m playwright install --with-deps chromium
-      - name: Browser script syntax and CMS model tests
-        env:
-          LEETMATH_RUN_BROWSER_TESTS: "1"
-          LEETMATH_REQUIRE_BROWSER: "1"
+      - name: JavaScript syntax and CMS model tests
         run: |
           node --check frontend/app.js
           node --check frontend/cms-editor.js
           node --test frontend/tests/*.test.cjs
-          PYTHONPATH=backend python -m pytest -q backend/tests/test_browser_e2e.py backend/tests/test_auth_security.py backend/tests/test_rate_limit.py
+
+  browser:
+    name: Chromium E2E, auth and Redis
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      LEETMATH_REDIS_URL: redis://127.0.0.1:6379/0
+      LEETMATH_COOKIE_SECURE: "0"
+      LEETMATH_CSRF_SECRET: leetmath-ci-csrf-secret-at-least-32-chars
+      LEETMATH_RUN_BROWSER_TESTS: "1"
+      LEETMATH_REQUIRE_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install Python dev dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Install Chromium for Playwright
+        run: python -m playwright install --with-deps chromium
+      - name: Browser E2E, auth and rate-limit regression
+        env:
+          PYTHONPATH: backend
+        run: python -m pytest -q backend/tests/test_browser_e2e.py backend/tests/test_auth_security.py backend/tests/test_rate_limit.py
       - name: Upload browser traces and screenshots
         if: always()
         uses: actions/upload-artifact@v4
