@@ -6,9 +6,94 @@
 本文写给接手人：现在到哪一步、如何 15 分钟自证可运行、哪些不变量不能碰、还差什么、下一步先做什么。
 
 > N1 PR #2 已合并，结构化 CMS 与 CI 已进入 main。N2 的 Issues #3/#4 正在分支 feat/n2-e2e-cookie-redis 实施；浏览器 E2E、Cookie/CSRF 与 Redis 双进程测试必须以该分支 PR checks 的真实结果为准，不能把代码已提交等同于验收完成。详细源码调用链见 [docs/15](docs/15-n2-source-flow-security-and-browser-e2e.md)。
+
+---
+
+# Pi Local Validation｜2026-11-18
+
+> 本节由 Pi coding agent 于 2026-11-18 在本机完成的全栈验收记录。它是**当前最新状态**；下方 §0–§7 是 2026-11-17 的历史快照，两者不一致时以本节与 `docs/validation/` 为准。机读入口：[docs/validation/LATEST-AGENT-HANDOFF.md](docs/validation/LATEST-AGENT-HANDOFF.md)。
+
+### 1. Git 基线
+
+| 项 | 值 |
+|---|---|
+| 用户指定的验收基线 | `feat/n2-e2e-cookie-redis` @ `08caab892daded21139a91b05fa461460d7ff0e1`（PR #5，仍 OPEN） |
+| 起始 `origin/main` | `d8b09f813b44e2620084e2cf6e246ad6ac56f19f`（PR #2 已合并） |
+| 本轮工作分支 | `fix/pi-local-n2-validation-20261118`（已推送） |
+| 本轮 PR | [#6](https://github.com/1998x-stack/LeetMath/pull/6) — **stacked，base=`feat/n2-e2e-cookie-redis`**；#5 合并后再并入 main |
+| 修复提交 | `bce9ac2` test(e2e) · `27a5485` fix(cms) 区域/状态钩子 · `0401d97` fix(auth) 登出+CSRF · `e40e9c8` fix(cms) diff 路径 · `9031b6c` fix(ui) 溢出折行 · `8a15ffc` chore(gitignore) |
+| 最终 SHA | 见 `git log -1`（本文件与验证报告同在一个提交里） |
+
+### 2. 本机环境与模型
+
+macOS 27.3（Darwin 27.3.0 arm64，10 vCPU / 16 GiB）；git 2.54.0；Python 3.12.15（`.venv`，与 Dockerfile 一致）；Node v26.13.1；Docker 29.9.1 / Compose v5.6.0；Playwright chromium 159.0.8154.6。
+
+Pi：`iagent/standard`（thinking high）。注册表**没有** `deepseek-flash`；最接近的是 `deepseek.v.4-b300/DeepSeek-V4-Flash`（vision）。本轮未使用该模型，也未声称使用过；截图的人工/视觉复核仍需 vision 模型或人工完成。
+
+### 3. 部署方式与状态
+
+完整栈：`docker compose -f docker-compose.yml -f /tmp/lm-compose-override.yml up -d --build`（覆盖文件仅改端口，不写入仓库）。
+**端口 18000**（`8000:8000` 的默认映射被用户其它进程占用，未终止该进程）：app `Up`，db `postgres:16` healthy，redis `redis:7-alpine` healthy。未执行 `down -v`，未删除既有数据卷，seed 幂等（`already seeded`）。
+隔离测试资源：`lm-test-pg`(15432)、`lm-test-redis`(16379)；宿主 5432/6379 属于用户，未被测试连接。
+原生路径：`PORT=18001 ./scripts/run-local.sh`（SQLite；默认不配 Redis → 开发态进程内限流）。
+
+### 4. 实际通过的功能
+
+全栈启动与健康检查、真实 HTTP 探测（`/`、`/login`、`/api/health`、`/api/docs`、`/api/openapi.json` 68 paths、本地 KaTeX 静态资源）；学生端浏览/搜索/筛选/多小问作答/错题/收藏/进度/提交历史/登出（浏览器 46/46）；教师 CMS 全流程（建稿→预检→送审→数学审核→版权审核→发布→只读→新修订→diff→412 冲突）与 XSS 文本惰性渲染；响应式 8 页面 × 1280/768/375 共 24 项无横向溢出；Cookie/CSRF/Origin/429+Retry-After/Bearer/hash-only 存储 17/17；SQLite 与 PostgreSQL 16 全量 255 passed（各 3 skipped 为浏览器用例，默认跳过）；Alembic 升/无漂移/降/再升（SQLite + PG16）；DDL 与 OpenAPI 生成物一致；以确定性状态（revision 状态钩子、网络响应、DOM 区域）而非子串文本或固定 sleep 等待的浏览器 E2E **13 passed**（修复前 CI 为 1 failed, 12 passed）。
+
+### 5. 实际失败或跳过的功能
+
+- 生产 HTTPS 路径（`Secure` + `__Host-` 前缀 Cookie、生产启动自检）**未执行**：本机无 TLS 终止。
+- 像素级视觉/审美复核**未执行**：本轮模型无 vision，只做程序化断言并留档截图。
+- Firefox/WebKit、真机 iOS/Android、多实例部署、压测与 SLO、备份恢复演练、未成年人数据合规审查**未覆盖**。
+- `GET /openapi.json` 被 SPA catch-all 命中返回 200 HTML（规范在 `/api/openapi.json`）——已登记为 P2，未修。
+
+### 6. 自动化测试矩阵
+
+见 [docs/validation/2026-11-18-test-matrix.md](docs/validation/2026-11-18-test-matrix.md)（逐条命令、工作目录、退出码与统计）。摘要：CI parity 13 passed；SQLite 255 passed/3 skipped；PG16 255 passed/3 skipped；Node 7 pass/0 fail；契约 13/13；DDL 与 OpenAPI 无差异；Alembic 通过。
+
+### 7. 本轮修复的缺陷
+
+| ID | 优先级 | 摘要 | 提交 |
+|---|---|---|---|
+| LM-LOCAL-001 | P0 | RichText 字段名跨区域重复 → Playwright strict mode 阻断全部浏览器验收（同时是 a11y 缺口） | `bce9ac2` + `27a5485` |
+| LM-LOCAL-002 | P1 | 新修订 diff 把 `revision.id/revision_no/status/parts[i].id` 计为内容变更（0 改动显示 4 处） | `e40e9c8` |
+| LM-LOCAL-003 | P0 | 375px 下长不可断行标题把整页撑到 437px | `9031b6c` |
+| LM-LOCAL-004 | P0 | SPA 登出后重新登录 403（CSRF 缓存竞态：登出请求自身回填了已失效 token） | `0401d97` |
+
+细节（复现、根因、日志/trace、修复前后验证、遗留风险）见 [docs/validation/2026-11-18-bugfix-report.md](docs/validation/2026-11-18-bugfix-report.md)。安全、部署与浏览器复核分别见 `docs/validation/2026-11-18-{security-review,pi-local-deployment,browser-review}.md`。
+
+### 8. 证据位置
+
+原始证据在 `artifacts/local-validation/2026-11-18/`（截图、trace、pytest 输出、JSON 探针结果），`artifacts/` 已加入 `.gitignore`，**未上传远端**——报告中只引用本机相对路径，不伪造远端链接。E2E 产物同时保留在 `artifacts/e2e/`（CI 会作为 artifact 上传）。
+
+### 9. 未解决的 P0/P1/P2
+
+**P0：无。** P1：限流阈值未按真实 NAT/代理校准、未压测；结构化 CMS 深度（批量编辑/更丰富的 diff）、媒体上传+扫描+签名 URL、异步判题队列未实现。P2：`GET /openapi.json` 被 SPA 吞掉；`#toast` 仅以 opacity 隐藏且保留文本（可能让断言或读屏读到过期消息）；CI quality job 混合了契约与浏览器 E2E（失败定位成本高）；依赖无锁文件；ruff 仅门禁部分规则。
+
+### 10. 下一轮优先事项
+
+1) 盯 #5 与 #6 的 CI；#5 合并后把 #6 并入/改基到 `main`。2) 拆分 CI job（契约/生成物/JS 与 Chromium E2E 分离）。3) 生产前置项：Secure Cookie、唯一 CSRF secret、共享 Redis、`FORWARDED_ALLOW_IPS` 收紧，并在发布窗口执行一次性旧会话撤销。4) 按 docs/13 §6 推进媒体上传、异步判题、搜索分词与判题回归集扩容（146 → 300+ 人工标注）。
+
+### 11. 回滚方式与限制
+
+代码回滚：撤销 `fix/pi-local-n2-validation-20261118` 的 6 个提交即可（无数据库迁移改动，`AuthSession` 表结构未变）。前端与认证必须**成对回滚**（只回滚 `app.js` 会留下被后端拒绝的写请求路径，见 docs/15 §6）。若已按 rollout 说明撤销过旧会话，回滚后用户需重新登录且旧会话不可恢复（不可逆）。禁止通过关闭 CSRF、RBAC 或把 Redis 限流降级为进程内计数来“绕过”故障。
+
+### 12. 是否可以进入下一阶段
+
+**N2 本机验收通过**：服务、DB、内容契约、API、Chromium E2E、CMS 闭环、安全回归与全量回归均有真实证据，0 个 P0 遗留。仍然**不是**生产上线许可：生产 HTTPS/Cookie 加固、反代信任配置、压测与 SLO、备份恢复演练、未成年人数据合规审查尚未执行。
+
+---
+
 产品与设计细节在 00–13 号文档里，本文只记录“当下状态与动作”。§1 的每条结论都附本次实测命令与结果，可复现。
 
 ---
+
+---
+
+# 历史快照｜2026-11-17（下方 §0–§7 为原始记录，保留不覆盖）
+
+> 以下内容记录 2026-11-17 的交接（当时 `main` @ `de32528`，N2 尚未开始验收）。其中“下一步”与“未修复”条目部分已被 2026-11-18 的 Pi Local Validation 超越；以本节上方与 `docs/validation/` 为准，勿删除原始证据。
 
 ## 0. 现状速览
 
