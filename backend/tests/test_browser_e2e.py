@@ -78,6 +78,27 @@ def _no_horizontal_overflow(page):
     )
 
 
+def _overflow_report(page):
+    """Elements wider than the viewport (widest first): evidence for overflow assertions."""
+    return page.evaluate(
+        """() => {
+        const vw = window.innerWidth;
+        const out = [];
+        for (const el of document.querySelectorAll('body *')) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) continue;
+          if (Math.round(r.right) > vw + 1 || Math.round(r.width) > vw + 1) {
+            out.push({tag: el.tagName.toLowerCase(), cls: String(el.className || '').slice(0, 50),
+              width: Math.round(r.width), right: Math.round(r.right), scrollWidth: el.scrollWidth,
+              text: (el.textContent || '').trim().slice(0, 50)});
+          }
+        }
+        out.sort((a, b) => b.right - a.right);
+        return out.slice(0, 12);
+      }"""
+    )
+
+
 def _save_failure(page, name):
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     try:
@@ -147,8 +168,20 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.get_by_role("button", name="新建题目").click()
         editor_page.get_by_label("题目标题").wait_for(state="visible", timeout=15000)
         desktop_sizes = _no_horizontal_overflow(editor_page)
-        assert desktop_sizes["document"] <= desktop_sizes["width"], f"desktop CMS overflow: {desktop_sizes}"
+        assert desktop_sizes["document"] <= desktop_sizes["width"], (
+            f"desktop CMS overflow: {desktop_sizes} culprits={_overflow_report(editor_page)}")
         revision_id = re.search(r"/admin/edit/([^/?#]+)", editor_page.url).group(1)
+
+        # Region-scoped handles: RichText field names repeat in every region
+        # ("行内公式 LaTeX #2" exists in the shared statement and in each part prompt),
+        # so every field is addressed through its stable region scope instead of a
+        # document-wide name match or a positional index.
+        assert editor_page.evaluate(
+            "() => [...document.querySelectorAll('section.cms-rich')]"
+            ".map((s) => s.getAttribute('data-cms-scope'))"
+        ) == ["revision.shared_statement", "revision.parts.1.prompt"]
+        shared_statement = editor_page.locator('section.cms-rich[data-cms-scope="revision.shared_statement"]')
+        first_part = editor_page.locator('section.cms-part[data-cms-part-key="1"]')
 
         # Inject a valid table block through advanced JSON, switch to the form and back,
         # and verify that unsupported rich media is preserved losslessly.
@@ -169,11 +202,11 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         # Edit title, MathRichText, standard answer; verify safe text rendering (no HTML execution).
         xss_text = 'E2E 正文 <img src=x onerror=window.__leetmathXss=1>'
         editor_page.get_by_label("题目标题").fill("N2 浏览器验收：<img src=x onerror=window.__leetmathXss=1>")
-        editor_page.get_by_label("正文 #1").first.fill(xss_text)
+        shared_statement.get_by_label("正文 #1").fill(xss_text)
         assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
         assert editor_page.evaluate("() => window.__leetmathXss || null") is None
-        editor_page.get_by_label("行内公式 LaTeX #2").fill(r"\frac{x^2+1}{x-1}")
-        editor_page.get_by_label("参考答案 · expected").fill("2x - 2")
+        shared_statement.get_by_label("行内公式 LaTeX #2").fill(r"\frac{x^2+1}{x-1}")
+        first_part.get_by_label("参考答案 · expected").fill("2x - 2")
         editor_page.locator(".cms-preview .katex").first.wait_for(state="visible", timeout=15000)
         assert editor_page.locator('.cms-preview img[src="x"]').count() == 0
 
@@ -188,7 +221,7 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         raw.fill(json.dumps(document, ensure_ascii=False, indent=2))
         editor_page.get_by_label("编辑模式").select_option(label="结构化表单")
         editor_page.get_by_role("button", name="预检当前内容").click()
-        editor_page.get_by_text("存在阻断项", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.locator('[data-preflight-state="blocking"]').wait_for(state="visible", timeout=15000)
         editor_page.get_by_text("RUBRIC_SUM_MISMATCH", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.get_by_label("编辑模式").select_option(label="高级 JSON")
         document = json.loads(raw.input_value())
@@ -196,28 +229,28 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         raw.fill(json.dumps(document, ensure_ascii=False, indent=2))
         editor_page.get_by_label("编辑模式").select_option(label="结构化表单")
         editor_page.get_by_role("button", name="预检当前内容").click()
-        editor_page.get_by_text("无阻断项", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.locator('[data-preflight-state="ok"]').wait_for(state="visible", timeout=15000)
         editor_page.get_by_role("button", name="保存草稿").click()
         editor_page.get_by_text("已保存（版本锁", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.get_by_role("button", name="送审").click()
-        editor_page.get_by_text("in_math_review", exact=False).wait_for(state="visible", timeout=15000)
+        editor_page.locator('[data-revision-status="in_math_review"]').wait_for(state="visible", timeout=15000)
 
         # A different reviewer performs the math gate.
         _login(reviewer_page, live_server, "reviewer", "reviewer-pass-123")
         reviewer_page.goto(live_server + f"/admin/edit/{revision_id}", wait_until="networkidle")
         reviewer_page.get_by_role("button", name="数学审核通过").click()
-        reviewer_page.get_by_text("in_rights_review", exact=False).wait_for(state="visible", timeout=15000)
+        reviewer_page.locator('[data-revision-status="in_rights_review"]').wait_for(state="visible", timeout=15000)
 
         # A distinct rights reviewer performs the rights gate.
         _login(rights_page, live_server, "rights", "rights-pass-123")
         rights_page.goto(live_server + f"/admin/edit/{revision_id}", wait_until="networkidle")
         rights_page.get_by_role("button", name="版权审核通过").click()
-        rights_page.get_by_text("approved", exact=False).wait_for(state="visible", timeout=15000)
+        rights_page.locator('[data-revision-status="approved"]').wait_for(state="visible", timeout=15000)
 
         # Reviewer publishes only after both gates have passed.
         reviewer_page.goto(live_server + f"/admin/edit/{revision_id}", wait_until="networkidle")
         reviewer_page.get_by_role("button", name="发布").click()
-        reviewer_page.get_by_text("published", exact=False).wait_for(state="visible", timeout=15000)
+        reviewer_page.locator('[data-revision-status="published"]').wait_for(state="visible", timeout=15000)
         row = reviewer_page.evaluate(
             """async (rid) => {
               const response = await fetch('/api/v1/admin/problem-revisions/' + rid);
@@ -235,11 +268,15 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         editor_page.get_by_role("button", name="基于此创建新修订").click()
         editor_page.get_by_label("题目标题").wait_for(state="visible", timeout=15000)
         editor_page.get_by_text("相对上一版本的差异", exact=False).wait_for(state="visible", timeout=15000)
+        # A revision created from the published one has no editorial changes yet: row ids,
+        # revision number and draft status must not be counted as content differences.
+        editor_page.get_by_text("相对上一版本的差异 · 0 处", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.get_by_label("题目标题").fill("N2 浏览器验收：含参数函数（修订）")
         editor_page.get_by_text("相对上一版本的差异 · 1 处", exact=False).wait_for(state="visible", timeout=15000)
         editor_page.set_viewport_size({"width": 375, "height": 812})
         cms_sizes = _no_horizontal_overflow(editor_page)
-        assert cms_sizes["document"] <= cms_sizes["width"], f"mobile CMS document overflow: {cms_sizes}"
+        assert cms_sizes["document"] <= cms_sizes["width"], (
+            f"mobile CMS document overflow: {cms_sizes} culprits={_overflow_report(editor_page)}")
         assert cms_sizes["body"] <= cms_sizes["width"], f"mobile CMS body overflow: {cms_sizes}"
         editor_page.screenshot(path=str(ARTIFACTS / "teacher-cms-mobile-375.png"), full_page=True)
 
@@ -253,7 +290,8 @@ def test_teacher_full_review_publish_revision_and_cookie_flow(live_server):
         )
         editor_page.set_viewport_size({"width": 375, "height": 812})
         sizes = _no_horizontal_overflow(editor_page)
-        assert sizes["document"] <= sizes["width"], f"mobile CMS/public page overflow: {sizes}"
+        assert sizes["document"] <= sizes["width"], (
+            f"mobile CMS/public page overflow: {sizes} culprits={_overflow_report(editor_page)}")
         assert sizes["body"] <= sizes["width"], f"mobile body overflow: {sizes}"
         editor_page.screenshot(path=str(ARTIFACTS / "teacher-review-publish-mobile-375.png"), full_page=True)
 
@@ -317,6 +355,7 @@ def test_two_editors_receive_precondition_failure_without_losing_input(live_serv
         )
         second_page.get_by_role("button", name="保存草稿").click()
         second_page.get_by_text("草稿已被他人修改", exact=False).wait_for(state="visible", timeout=15000)
+        second_page.locator('[data-action-error="EDIT_CONFLICT"]').wait_for(state="visible", timeout=15000)
         assert 412 in statuses  # EDIT_CONFLICT is an HTTP precondition failure.
         assert second_page.get_by_label("题目标题").input_value() == "编辑者 B 的本地输入"
     except Exception:
