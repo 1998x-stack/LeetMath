@@ -1,17 +1,36 @@
 # LeetMath 交接说明（HANDOFF）
 
-> 交接日期：2026-11-17 · 交接基线：`main` 分支（含本文件的提交）· 依据文档：[docs/13 实施计划与状态 v0.2](docs/13-implementation-plan-and-status.md)
+> 最新远端整合：2026-11-18 · `main` @ `e4dc63de75ca1e846a6f70bc97fced8d66925b5d`（本交接文档更新前）· 依据：[docs/13](docs/13-implementation-plan-and-status.md) 与 [最新机读交接](docs/validation/LATEST-AGENT-HANDOFF.md)
 > 交付形态：**可运行 MVP（本地 / 试点环境）**，**不是生产上线**。任何对外表述、对外演示与招生宣传都不得超出该范围。
 
 本文写给接手人：现在到哪一步、如何 15 分钟自证可运行、哪些不变量不能碰、还差什么、下一步先做什么。
 
-> N1 PR #2 已合并，结构化 CMS 与 CI 已进入 main。N2 的 Issues #3/#4 正在分支 feat/n2-e2e-cookie-redis 实施；浏览器 E2E、Cookie/CSRF 与 Redis 双进程测试必须以该分支 PR checks 的真实结果为准，不能把代码已提交等同于验收完成。详细源码调用链见 [docs/15](docs/15-n2-source-flow-security-and-browser-e2e.md)。
+> N1 已合并；N2 的 PR #5/#6 与 N2.1 的 PR #7/#8 均已通过远端 CI 并合入 `main`。详细调用链见 [docs/15](docs/15-n2-source-flow-security-and-browser-e2e.md)。下方 Pi Local Validation 为保留的历史本机验收快照，不能据此判断当前 GitHub PR 或本机 Compose 进程状态。
 
 ---
 
-# Pi Local Validation｜2026-11-18
+# 最新 GitHub 整合｜2026-11-18（当前状态）
 
-> 本节由 Pi coding agent 于 2026-11-18 在本机完成的全栈验收记录。它是**当前最新状态**；下方 §0–§7 是 2026-11-17 的历史快照，两者不一致时以本节与 `docs/validation/` 为准。机读入口：[docs/validation/LATEST-AGENT-HANDOFF.md](docs/validation/LATEST-AGENT-HANDOFF.md)。
+> **优先读这一节及 [LATEST-AGENT-HANDOFF](docs/validation/LATEST-AGENT-HANDOFF.md)。** 下方 Pi Local Validation 及 2026-11-17 记录是历史快照，不要照搬其中的旧分支合并步骤。以下合并与 CI 结果已经通过 GitHub 远端核实；**没有**从远端重新运行用户 macOS 上的 Compose 服务。
+
+| 交付 | PR | 已进入 `main` 的提交 | CI 证据 |
+|---|---|---|---|
+| N2 本地验收修复 | [#6](https://github.com/1998x-stack/LeetMath/pull/6)（先 squash 至 #5） | 经 #5 纳入 | [#6 CI](https://github.com/1998x-stack/LeetMath/actions/runs/44232733928) 3 jobs 成功 |
+| N2 Cookie/CSRF、Redis、Chromium E2E | [#5](https://github.com/1998x-stack/LeetMath/pull/5) | `b7dcab7e` | [#5 新 head CI](https://github.com/1998x-stack/LeetMath/actions/runs/44236625858) 3 jobs 成功；[main push](https://github.com/1998x-stack/LeetMath/actions/runs/44236829743) 成功 |
+| N2.1 契约/JS 与浏览器 CI 分层 | [#7](https://github.com/1998x-stack/LeetMath/pull/7) | `56ad71b9` | [#7 CI](https://github.com/1998x-stack/LeetMath/actions/runs/44236944304) 4 jobs 成功；[main push](https://github.com/1998x-stack/LeetMath/actions/runs/44237189022) 成功 |
+| N2.1 登出失败时保留真实会话状态 | [#8](https://github.com/1998x-stack/LeetMath/pull/8) | `e4dc63de` | [#8 CI](https://github.com/1998x-stack/LeetMath/actions/runs/44237215573) 4 jobs 成功，Chromium/browser+auth+rate **14 passed** |
+
+**已完成**：N2 PR 整合，CI 解耦，网络失败登出的错误反馈与可靠重试。原 Pi 的本机 E2E 是 13 passed；后续 #8 新增 1 个 Chromium 用例，故最新远端为 **14 passed**。这不表示原有本机证据 46/46、17/17 已在新 `main` 上再次运行。
+
+**下一轮**：新代理先 `git fetch --all --prune`、核对 `origin/main` 与工作树，保留本机未提交内容和 Docker 卷，别再合并已完成的 #5/#6。优先推进 [N3 教师人工批改 Issue #9](https://github.com/1998x-stack/LeetMath/issues/9)；其后处理依赖锁文件、toast 残留文本、API catch-all、教师 CMS 深化与媒体安全。任何教师批改/数学与版权审核不能伪造签核证据。
+
+**未取得生产上线许可**：HTTPS 下 `Secure`/`__Host-` Cookie、反向代理可信地址、限流压测、备份恢复、旧会话撤销操作窗口、未成年人数据合规、教学视觉评审仍需专项验证。
+
+---
+
+# 历史 Pi Local Validation｜2026-11-18
+
+> 本节由 Pi coding agent 于 2026-11-18 在本机完成的全栈验收记录。这是**历史本机验收快照**；当前 GitHub PR 状态以本文上方“最新 GitHub 整合”和 `docs/validation/LATEST-AGENT-HANDOFF.md` 为准。下方 §0–§7 是 2026-11-17 的更早快照。机读入口：[docs/validation/LATEST-AGENT-HANDOFF.md](docs/validation/LATEST-AGENT-HANDOFF.md)。
 
 ### 1. Git 基线
 
