@@ -6,7 +6,7 @@
 const $app = document.getElementById("app");
 // Remove credentials left by the pre-N2 SPA; the browser session now lives only in HttpOnly cookies.
 try { sessionStorage.removeItem("lm_token"); localStorage.removeItem("lm_token"); } catch {}
-const state = { csrfToken: null, user: null, attempts: {}, knowledge: null };
+const state = { csrfToken: null, csrfGeneration: 0, user: null, attempts: {}, knowledge: null };
 
 function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
@@ -30,12 +30,22 @@ function mount(...nodes) { $app.replaceChildren(...nodes); $app.focus({ preventS
 
 async function csrfToken() {
   if (state.csrfToken) return state.csrfToken;
-  const res = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", headers: { Accept: "application/json" } });
-  if (!res.ok) throw { status: res.status, code: "CSRF_BOOTSTRAP_FAILED", message: "无法初始化安全请求令牌" };
-  const data = await res.json();
-  state.csrfToken = data.csrf_token;
-  return state.csrfToken;
+  // A bootstrap can be in flight while a logout invalidates the pair (the server reuses an
+  // existing CSRF cookie and deletes it on logout), so a token fetched before the logout
+  // response landed must not be cached: the next cookie-auth write would 403.
+  let token = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const generation = state.csrfGeneration;
+    const res = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", headers: { Accept: "application/json" } });
+    if (!res.ok) throw { status: res.status, code: "CSRF_BOOTSTRAP_FAILED", message: "无法初始化安全请求令牌" };
+    token = (await res.json()).csrf_token;
+    if (generation === state.csrfGeneration) { state.csrfToken = token; return token; }
+  }
+  return token; // invalidated while bootstrapping: usable once, never cached
 }
+
+/** Drop the cached CSRF pair and invalidate any bootstrap still in flight. */
+function invalidateCsrf() { state.csrfToken = null; state.csrfGeneration += 1; }
 
 async function api(method, path, body, extraHeaders = {}) {
   const headers = { ...extraHeaders };
@@ -54,7 +64,7 @@ async function api(method, path, body, extraHeaders = {}) {
   const data = ct.includes("json") ? await res.json() : await res.text();
   if (!res.ok) {
     const err = (data && data.error) || { code: "HTTP_" + res.status, message: String(data) };
-    if (err.code === "CSRF_TOKEN_INVALID" || err.code === "CSRF_TOKEN_MISSING") state.csrfToken = null;
+    if (err.code === "CSRF_TOKEN_INVALID" || err.code === "CSRF_TOKEN_MISSING") invalidateCsrf();
     if (res.status === 401 && err.code === "AUTH_REQUIRED") { state.user = null; renderAccount(); }
     throw { status: res.status, ...err, etag: res.headers.get("ETag") };
   }
@@ -130,10 +140,13 @@ function renderAccount() {
   if (state.user) box.replaceChildren(h("span", {}, state.user.display_name), h("span", { class: "chip" }, state.user.roles.join(" · ")), h("button", { class: "btn sm", onclick: () => logout() }, "退出"));
   else box.replaceChildren(h("a", { href: "/login", "data-link": true, class: "btn sm primary" }, "登录 / 注册"));
 }
-function logout(silent) {
-  if (!silent) api("POST", "/auth/logout").catch(() => {});
+async function logout(silent) {
+  // Wait for the server to revoke the session and delete both cookies before clearing local
+  // state: otherwise a bootstrap started by this very request can re-cache a dead CSRF token
+  // and the next login is rejected with 403 CSRF_TOKEN_MISSING.
+  if (!silent) { try { await api("POST", "/auth/logout"); } catch { /* session already gone */ } }
   state.user = null;
-  state.csrfToken = null; // logout clears the CSRF cookie; the next login must bootstrap a fresh pair.
+  invalidateCsrf();
   state.attempts = {};
   renderAccount();
   if (!silent) navigate("/");
@@ -562,7 +575,7 @@ async function adminEdit(body, rid) {
   ta.addEventListener("input", updateDiff);
   const act = (label, fn, cls = "btn") => h("button", { class: cls, onclick: async () => {
     try { await fn(); }
-    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected" }, errText(e)),
+    catch (e) { out.replaceChildren(h("div", { class: "feedback rejected", "data-action-error": e.code || "ERROR" }, errText(e)),
       e.details && e.details.issues ? issuesList(e.details.issues) : ""); }
   } }, label);
   const flow = (path, extra) => async () => {
@@ -574,7 +587,8 @@ async function adminEdit(body, rid) {
     const d = current();
     if (!d) return;
     const res = await api("POST", "/admin/preflight", { document: d });
-    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected") },
+    out.replaceChildren(h("div", { class: "feedback " + (res.ok ? "accepted" : "rejected"),
+      "data-preflight-state": res.ok ? "ok" : "blocking" },
       res.ok ? "无阻断项" : "存在阻断项"), issuesList(res.issues));
   }));
   if (editable) {
@@ -626,7 +640,7 @@ async function adminEdit(body, rid) {
   }
   body.append(h("div", { class: "panel" },
     h("div", { class: "row spread" }, h("h2", {}, r.display_id + " · v" + r.revision_no + " · " + r.title),
-      h("span", { class: "chip" }, r.status)),
+      h("span", { class: "chip", "data-revision-status": r.status }, r.status)),
     r.review_note ? h("p", { class: "feedback partial" }, "审核意见：" + r.review_note) : null,
     !editable ? h("p", { class: "small muted" }, "当前版本只读，已发布内容不可原位修改。") : null,
     h("div", { class: "row", style: "margin:10px 0" }, actions),
